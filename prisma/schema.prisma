@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String    @id @default(cuid())
+  name       String
+  username   String
+  password   String
+  avatar     String
+  created_at DateTime  @default(now())
+  updated_at DateTime?
+
+  course           Course[]
+  AssistantPersona AssistantPersona?
+}
+
+model AssistantPersona {
+  id          String    @id @default(cuid())
+  name        String
+  style       String
+  description String
+  created_at  DateTime  @default(now())
+  updated_at  DateTime?
+
+  user_id String @unique
+
+  user User @relation(references: [id], fields: [user_id])
+}
+
+model Course {
+  id                 String    @id @default(cuid())
+  title              String
+  progress           String
+  learning_conttext  String
+  additional_context String
+  created_at         DateTime  @default(now())
+  updated_at         DateTime?
+
+  content CourseContent[]
+
+  user_id String
+
+  user User @relation(references: [id], fields: [user_id])
+}
+
+model CourseContent {
+  id                    String    @id @default(cuid())
+  title                 String
+  summary               String
+  difficulty_level      String
+  time_spent            Int       @default(0)
+  last_prompt           String?
+  last_playground_input String?
+  content               String
+  created_at            DateTime  @default(now())
+  update_at             DateTime?
+
+  quiz Quiz[]
+
+  course_id String
+
+  course Course @relation(references: [id], fields: [course_id])
+}
+
+model Quiz {
+  id String @id @default(cuid())
+  created_at DateTime @default(now())
+  updated_at DateTime?
+
+  quiz_question QuizQuestion[]
+
+  course_content_id String
+
+  course_content CourseContent @relation(references: [id], fields: [course_content_id])
+}
+
+model QuizQuestion {
+  id          String    @id @default(cuid())
+  question    String
+  answer      String
+  answer_list String
+  status      Int       @default(0)
+  start_time  DateTime
+  end_time    DateTime?
+  hint_asked  Int
+  last_hint   String
+  created_at  DateTime  @default(now())
+  updated_at  DateTime?
+
+  quiz_id String
+
+  quiz Quiz @relation(references: [id], fields: [quiz_id])
+}
+
+model SystemPrompt {
+  id     String @id @default(cuid())
+  prompt String
+}

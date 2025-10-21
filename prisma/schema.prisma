@@ -17,13 +17,15 @@ datasource db {
 model User {
   id         String    @id @default(cuid())
   name       String
+  email      String    @unique
   username   String
-  password   String
-  avatar     String
+  password   String?
+  avatar     String?
   created_at DateTime  @default(now())
   updated_at DateTime?
 
   course           Course[]
+  session          Session[]
   AssistantPersona AssistantPersona?
 }
 
@@ -76,7 +78,7 @@ model CourseContent {
 }
 
 model Quiz {
-  id String @id @default(cuid())
+  id         String @id @default(cuid())
   created_at DateTime @default(now())
   updated_at DateTime?
 
@@ -109,3 +111,13 @@ model SystemPrompt {
   id     String @id @default(cuid())
   prompt String
 }
+
+model Session {
+  id         String  @id @default(cuid())
+  expired_at DateTime 
+  created_at DateTime @default(now())
+  
+  user_id    String
+
+  user User @relation(references: [id], fields: [user_id])
+} 

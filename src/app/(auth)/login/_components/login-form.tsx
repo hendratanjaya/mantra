@@ -17,8 +17,8 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const oauthSuccess = searchParams.get(oauthState.success) === "true";
-  const oauthError = searchParams.get(oauthState.error) === "true";
+  // const oauthSuccess = searchParams.get(oauthState.success) === "true";
+  // const oauthError = searchParams.get(oauthState.error) === "true";
 
   const [pending, startTransition] = useTransition();
 
@@ -62,8 +62,8 @@ export default function LoginForm() {
     );
   };
 
-  if (oauthError) toast.error("ERRORRRR");
-  if (oauthSuccess) toast.success("SUCCESSSSS");
+  // if (oauthError) toast.error("ERRORRRR");
+  // if (oauthSuccess) toast.success("SUCCESSSSS");
 
   return (
     <AuthForm

@@ -22,11 +22,12 @@ model User {
   password   String?
   avatar     String?
   created_at DateTime  @default(now())
-  updated_at DateTime?
+  updated_at DateTime  @updatedAt
 
-  course           Course[]
-  session          Session[]
-  AssistantPersona AssistantPersona?
+  course            Course[]
+  session           Session[]
+  assistant_persona AssistantPersona?
+  chat              Chat[]
 }
 
 model AssistantPersona {
@@ -34,59 +35,62 @@ model AssistantPersona {
   name        String
   style       String
   description String
+  tone        String
+  depth       String
+  language    String
   created_at  DateTime  @default(now())
-  updated_at  DateTime?
+  updated_at  DateTime  @updatedAt
 
   user_id String @unique
 
-  user User @relation(references: [id], fields: [user_id])
+  user User @relation(references: [id], fields: [user_id], onDelete: Cascade)
 }
 
 model Course {
   id                 String    @id @default(cuid())
   title              String
-  progress           String
-  learning_conttext  String
-  additional_context String
+  progress           Int
+  summary            String 
   created_at         DateTime  @default(now())
-  updated_at         DateTime?
+  updated_at         DateTime  @updatedAt
 
   content CourseContent[]
+  chat Chat[]
 
   user_id String
 
-  user User @relation(references: [id], fields: [user_id])
+  user User @relation(references: [id], fields: [user_id], onDelete: Cascade)
 }
 
 model CourseContent {
   id                    String    @id @default(cuid())
   title                 String
-  summary               String
   difficulty_level      String
+  order                 Int
   time_spent            Int       @default(0)
-  last_prompt           String?
-  last_playground_input String?
   content               String
+  metadata              String
   created_at            DateTime  @default(now())
-  update_at             DateTime?
+  update_at             DateTime  @updatedAt
 
-  quiz Quiz[]
+  quiz     Quiz[]
 
-  course_id String
+  course_id String 
 
-  course Course @relation(references: [id], fields: [course_id])
+  course Course @relation(references: [id], fields: [course_id], onDelete: Cascade)
 }
 
 model Quiz {
-  id         String @id @default(cuid())
+  id         String   @id @default(cuid())
   created_at DateTime @default(now())
-  updated_at DateTime?
+  updated_at DateTime @updatedAt
 
   quiz_question QuizQuestion[]
 
   course_content_id String
+  chat Chat[]
 
-  course_content CourseContent @relation(references: [id], fields: [course_content_id])
+  course_content CourseContent @relation(references: [id], fields: [course_content_id], onDelete: Cascade)
 }
 
 model QuizQuestion {
@@ -100,11 +104,11 @@ model QuizQuestion {
   hint_asked  Int
   last_hint   String
   created_at  DateTime  @default(now())
-  updated_at  DateTime?
+  updated_at  DateTime  @updatedAt
 
   quiz_id String
 
-  quiz Quiz @relation(references: [id], fields: [quiz_id])
+  quiz Quiz @relation(references: [id], fields: [quiz_id], onDelete: Cascade)
 }
 
 model SystemPrompt {
@@ -121,3 +125,21 @@ model Session {
 
   user User @relation(references: [id], fields: [user_id])
 } 
+
+model Chat {
+  id         String @id @default(cuid())
+  mode       String // "regular" | "course" | "quiz"
+  sender     String // "user" | "bot"
+  message    String 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user_id   String
+  course_id String?
+  quiz_id   String?
+
+  user   User    @relation(references: [id], fields: [user_id], onDelete: Cascade)
+  course Course? @relation(references: [id], fields: [course_id], onDelete: Cascade)
+  quiz   Quiz?   @relation(references: [id], fields: [quiz_id], onDelete: Cascade)
+
+}

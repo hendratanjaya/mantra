@@ -126,4 +126,94 @@
   .auth-link {
     @apply underline;
   }
+  div[contentEditable="plaintext-only"] {
+    /* width: 20rem;
+    height: 15rem; */
+    /* background: #292929;
+    color: #fff; */
+
+    /* Placeholder code */
+    &[data-placeholder]:empty::before {
+      content: attr(data-placeholder);
+      color: color-mix(in oklab, var(--foreground) 20%, transparent);
+    }
+
+    /* &[data-placeholder]:empty:focus::before {
+      content: "";
+    } */
+  }
 }
+
+@layer components {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* or any color */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(53, 53, 53, 0.562); /* visible thumb color */
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+  .markdown-chat-body {
+    @apply prose prose-sm max-w-none;
+  }
+  .markdown-chat-body h1,
+  .markdown-chat-body h2,
+  .markdown-chat-body h3,
+  .markdown-chat-body h4,
+  .markdown-chat-body h5,
+  .markdown-chat-body h6,
+  .markdown-chat-body hr,
+  .markdown-chat-body ul,
+  .markdown-chat-body p {
+    @apply mt-1 mb-1;
+  }
+
+  .markdown-body {
+    @apply prose max-w-none;
+  }
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4,
+  .markdown-body h5,
+  .markdown-body h6,
+  .markdown-body strong {
+    @apply font-bold;
+  }
+}
+
+@layer utilities {
+  @keyframes dot-blink {
+    0%,
+    80%,
+    100% {
+      opacity: 0;
+    }
+    40% {
+      opacity: 1;
+    }
+  }
+
+  .animate-dot {
+    animation: dot-blink 1.4s infinite both;
+  }
+
+  .delay-0 {
+    animation-delay: 0s;
+  }
+  .delay-1 {
+    animation-delay: 0.2s;
+  }
+  .delay-2 {
+    animation-delay: 0.4s;
+  }
+}
+@plugin "@tailwindcss/typography";

@@ -22,4 +22,6 @@ export const logger = {
 
     console.error(formatMessage("ERROR", message));
   },
+  warn: (message: string, opts?: { path: string; time: string; ip: string }) =>
+    console.warn(formatMessage("WARNING", message), opts),
 };

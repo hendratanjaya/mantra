@@ -9,7 +9,8 @@ import { prisma } from "@/utils/prisma";
 import { logger } from "@/utils/logger";
 import { Prisma } from "@/generated/prisma";
 import { oauthState } from "./_constants";
-import { createCookie } from "../_actions/action";
+import { createCookie, deleteCookie } from "../_actions/action";
+import { cookies } from "next/headers";
 
 export async function continueWithGoogleAction() {
   const state = arctic.generateState();

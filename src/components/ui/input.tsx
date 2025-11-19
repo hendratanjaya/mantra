@@ -1,6 +1,8 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
+import { TbEyeClosed } from "react-icons/tb";
+import { RiEyeFill } from "react-icons/ri";
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
@@ -15,7 +17,36 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       )}
       {...props}
     />
-  )
+  );
 }
 
-export { Input }
+function InputPassword({
+  className,
+  type,
+  ...props
+}: React.ComponentProps<"input">) {
+  const [isOpenEye, setIsOpenEye] = React.useState(false);
+
+  return (
+    <div className="relative">
+      <Input
+        type={isOpenEye ? "text" : "password"}
+        className={className}
+        {...props}
+      />
+      <button
+        type="button"
+        className="absolute top-[50%] -translate-y-[50%] right-[1.5px] p-1.5 bg-background text-muted-foreground rounded-full"
+        onClick={() => setIsOpenEye((prev) => !prev)}
+      >
+        {isOpenEye ? (
+          <TbEyeClosed fontSize={20} />
+        ) : (
+          <RiEyeFill fontSize={20} />
+        )}
+      </button>
+    </div>
+  );
+}
+
+export { Input, InputPassword };

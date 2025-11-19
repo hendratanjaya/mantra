@@ -15,11 +15,10 @@ export async function logoutAction() {
       });
   } catch (error) {
     logger.error(`Failed to delete session:${sessionId}`);
-    throw error;
-  } finally {
-    await deleteCookie("session_id");
-    redirect("/login");
+    logger.error(error);
   }
+  await deleteCookie("session_id");
+  redirect("/login");
 }
 export async function createCookie(
   cookieName: string,

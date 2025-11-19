@@ -18,9 +18,13 @@ import {
 import { RiAccountPinBoxLine, RiLogoutBoxRLine } from "react-icons/ri";
 import { HiDotsVertical } from "react-icons/hi";
 import { LogoutButton } from "./logout-button";
+import { useContext } from "react";
+import { UserProviderContext } from "../_providers/user-provider";
 
 export function FooterSidebar({}) {
   const { isMobile } = useSidebar();
+  const userContext = useContext(UserProviderContext);
+  const avatartFallback = userContext?.name.slice(0, 2).toUpperCase() || "404";
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -32,15 +36,16 @@ export function FooterSidebar({}) {
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage
-                  src={"https://github.com/shadcn.png"}
-                  alt={"name"}
+                  src={userContext?.avatar || undefined}
+                  alt={"https://github.com/shadcn.png"}
                 />
-                <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {avatartFallback}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{"name"}</span>
                 <span className="text-muted-foreground truncate text-xs">
-                  {"email"}
+                  {userContext?.username || "unknown_user_404"}
                 </span>
               </div>
               <HiDotsVertical className="ml-auto size-4" />
@@ -56,15 +61,19 @@ export function FooterSidebar({}) {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
-                    src={"https://github.com/shadcn.png"}
-                    alt={"name"}
+                    src={userContext?.avatar || undefined}
+                    alt={"https://github.com/shadcn.png"}
                   />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                    {avatartFallback}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{"name"}</span>
+                  <span className="truncate font-medium">
+                    {userContext?.name || "unknown_user_404"}
+                  </span>
                   <span className="text-muted-foreground truncate text-xs">
-                    {"email"}
+                    {userContext?.email}
                   </span>
                 </div>
               </div>

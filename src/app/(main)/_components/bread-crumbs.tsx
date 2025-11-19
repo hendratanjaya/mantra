@@ -8,6 +8,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { usePathname } from "next/navigation";
+import { Fragment } from "react";
 export function BreadCrumbHeader() {
   const path = usePathname();
 
@@ -20,12 +21,9 @@ export function BreadCrumbHeader() {
     return (
       <BreadcrumbItem key={href} className="hidden md:block">
         {!isLastPath ? (
-          <>
-            <BreadcrumbLink href={href} className="capitalize">
-              {segment}
-            </BreadcrumbLink>
-            <BreadcrumbSeparator className="hidden md:block" />
-          </>
+          <BreadcrumbLink href={href} className="capitalize">
+            {segment}
+          </BreadcrumbLink>
         ) : (
           <BreadcrumbPage className="capitalize">{segment}</BreadcrumbPage>
         )}
@@ -35,7 +33,16 @@ export function BreadCrumbHeader() {
 
   return (
     <Breadcrumb>
-      <BreadcrumbList>{breadCrumbs}</BreadcrumbList>
+      <BreadcrumbList>
+        {breadCrumbs.map((item, idx) => (
+          <Fragment key={idx}>
+            {item}
+            {idx !== breadCrumbs.length - 1 && (
+              <BreadcrumbSeparator className="hidden md:block" />
+            )}
+          </Fragment>
+        ))}
+      </BreadcrumbList>
     </Breadcrumb>
   );
 }

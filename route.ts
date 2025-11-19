@@ -1,2 +1,2 @@
 export const authRoute = ["/login", "/register", "/"];
-export const privateRoute = ["/dashboard"];
+export const privateRoute = ["/dashboard", "/course"];

@@ -34,11 +34,6 @@ export const courseFormFields: CourseFieldControllerType[] = [
       "File that relevant with topic you want to learn, this will help your assistant to understand and generate relevant topic (.pdf or .txt) ",
   },
   {
-    name: "content_url",
-    label: "Content URL",
-    placeholder: "Reference to link",
-  },
-  {
     name: "difficulty_preference",
     label: "Difficulty Preference",
     placeholder: "What difficulty you want for conten to be generated?",

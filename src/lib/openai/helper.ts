@@ -4,7 +4,9 @@ import {
   PromptToneGuidance,
 } from "./type";
 import { CanvasFactory } from "pdf-parse/worker";
+import { getHeader } from "pdf-parse/node";
 import { PDFParse } from "pdf-parse";
+import { UserException } from "../utils";
 
 export function getStructureGuidelines(
   style: keyof PromptStyleGuidance
@@ -54,22 +56,6 @@ export function getToneGuidance(tone: keyof PromptToneGuidance): string {
   return guidance[tone] || guidance.neutral;
 }
 
-export function getStyleGuidance(style: keyof PromptStyleGuidance): string {
-  const guidance = {
-    concise:
-      "Keep responses brief. 2-3 sentences for simple questions, ~1 paragraph for complex ones",
-    detailed:
-      "Provide thorough explanations with context and background. 2-3 paragraphs typical",
-    conversational:
-      "Natural flowing responses, like explaining to a friend. Medium length",
-    structured:
-      "Organize clearly with headers/bullets when helpful. Emphasize clarity",
-    socratic:
-      "Guide with questions before giving answers. Make learner think through it",
-  };
-  return guidance[style] || guidance.conversational;
-}
-
 export function getDepthGuidance(depth: keyof PromptDepthGuidance): string {
   const guidance = {
     surface: "Cover just the essential concept. Skip deep details unless asked",
@@ -81,36 +67,34 @@ export function getDepthGuidance(depth: keyof PromptDepthGuidance): string {
   return guidance[depth] || guidance.intermediate;
 }
 
-export async function extractContent(file: File) {
-  if (file.type === "application/pdf") return await extractPdfContent(file);
-
-  if (file.type === "text/plain") return await file.text();
-}
-
-async function extractPdfContent(file: File) {
+export async function getPdfInfo(file: File) {
   const buffer = await file.arrayBuffer();
+  const base64Pdf = Buffer.from(buffer).toString("base64");
+  // if(!result.isPdf)z
+  //   throw new UserException("Oops, we only accept PDF file", 400);
+
   const pdf = new PDFParse({ data: buffer, CanvasFactory });
-  const text = (await pdf.getText()).text;
+  const totalPages = (await pdf.getInfo()).total;
 
-  return text;
+  return { totalPages, base64Pdf };
 }
 
-export async function chunkText(text: string) {
-  const chunks = [];
-  const maxLength = 4000;
-  const sentences = text.split(".");
-  let currChunk = "";
+// export async function chunkText(text: string) {
+//   const chunks = [];
+//   const maxLength = 40000;
+//   const sentences = text.split(".");
+//   let currChunk = "";
 
-  for (const sentence of sentences) {
-    if ((currChunk + sentence).length > maxLength) {
-      chunks.push(currChunk);
-      currChunk = sentence;
-    } else {
-      currChunk += " " + sentence;
-    }
-  }
+//   for (const sentence of sentences) {
+//     if ((currChunk + sentence).length > maxLength) {
+//       chunks.push(currChunk);
+//       currChunk = sentence;
+//     } else {
+//       currChunk += " " + sentence;
+//     }
+//   }
 
-  if (currChunk) chunks.push(currChunk.trim());
+//   if (currChunk) chunks.push(currChunk.trim());
 
-  return chunks;
-}
+//   return chunks;
+// }

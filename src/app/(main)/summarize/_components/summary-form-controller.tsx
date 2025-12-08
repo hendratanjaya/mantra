@@ -1,51 +1,37 @@
 import { Controller, UseFormReturn } from "react-hook-form";
-import { CourseFieldControllerType } from "../type";
-import { CourseFormData } from "../../_schemas/course";
+import { SummaryFormData } from "../../_schemas/summary";
+import { ChangeEvent, useState } from "react";
+import { SummaryFieldControllerType } from "../type";
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldLabel,
 } from "@/components/ui/field";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { ChangeEvent, useState } from "react";
-import { SelectForm } from "./select-form";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
-export function CourseFormController({
+export function SummarFormController({
   name,
   label,
   placeholder,
   description,
   maxChar,
-  isTextArea,
   form,
-}: CourseFieldControllerType & { form: UseFormReturn<CourseFormData> }) {
+}: SummaryFieldControllerType & { form: UseFormReturn<SummaryFormData> }) {
   const [charCounter, setCharCounter] = useState(0);
-  const handleCharCount = <T extends HTMLInputElement | HTMLTextAreaElement>(
-    e: ChangeEvent<T>
-  ) => {
+  const handleCharCount = (e: ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     const charCount = value.length;
     setCharCounter(charCount);
   };
-  const contentType = form.watch("content_type");
 
   return (
     <Controller
       name={name}
       control={form.control}
       render={({ field, fieldState }) => (
-        <Field
-          className={cn(
-            `col-span-2 gap-y-2`,
-            name !== "content_type" &&
-              name.startsWith("content_") &&
-              contentType !== name &&
-              "hidden"
-          )}
-        >
+        <Field className={cn(`col-span-2 gap-y-2`)}>
           <FieldLabel>
             {label}
             <span className=" flex flex-1 justify-end pr-3">
@@ -56,23 +42,7 @@ export function CourseFormController({
               )}
             </span>
           </FieldLabel>
-          {isTextArea ? (
-            <Textarea
-              {...field}
-              id={`course_${name}`}
-              aria-invalid={fieldState.invalid}
-              placeholder={placeholder}
-              onChange={(e) => {
-                field.onChange(e);
-                if (maxChar) handleCharCount(e);
-              }}
-              maxLength={maxChar}
-              autoComplete="off"
-              className="h-[100px]"
-            />
-          ) : ["difficulty_preference", "content_type"].includes(name) ? (
-            <SelectForm onValueChange={field.onChange} name={name} />
-          ) : name === "content_file" ? (
+          {name === "content_file" ? (
             <Input
               type="file"
               content="pdf,txt"

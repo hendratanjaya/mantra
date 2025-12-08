@@ -1,4 +1,5 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,49 +11,42 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { FieldGroup, FieldSet } from "@/components/ui/field";
 import { useContext, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { CourseFormData, courseSchema } from "../../_schemas/course";
+import { SummaryFormData, summarySchema } from "../../_schemas/summary";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FieldGroup, FieldSet } from "@/components/ui/field";
-import { courseFormFields } from "../_constants";
-import { CourseFormController } from "./course-form-controller";
-import { generateNewCourse } from "../action";
-import { toast } from "sonner";
+import { summaryFormFields } from "../_constants";
+import { SummarFormController } from "./summary-form-controller";
+import { genearateNewSummary } from "../action";
 import { AssistantPersonaContext } from "../../_providers/assistant-provider";
 import { AssistantContext } from "@/lib/openai/type";
-import { UserProviderContext } from "../../_providers/user-provider";
-import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-export function AddNewCourseForm() {
+export function AddNewSummaryForm() {
   const [pending, startTransition] = useTransition();
-  const [redirecting, setRedirecting] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const assistantContext = useContext(
     AssistantPersonaContext
   ) as AssistantContext;
-  const userContext = useContext(UserProviderContext);
 
   const router = useRouter();
 
-  const form = useForm<CourseFormData>({
-    resolver: zodResolver(courseSchema),
+  const form = useForm<SummaryFormData>({
+    resolver: zodResolver(summarySchema),
     defaultValues: {
       title: "",
       topic: "",
-      content_type: "content_text",
-      difficulty_preference: "beginner",
-      content_text: "",
-      learning_goal: "",
-      prior_knowledge: "",
+      content_file: undefined,
     },
   });
 
-  const onSubmit = (data: CourseFormData) => {
+  const onSubmit = (data: SummaryFormData) => {
     console.log("masukk");
 
     startTransition(async () => {
-      const state = await generateNewCourse(
+      const state = await genearateNewSummary(
         data,
         assistantContext,
         "cmhe1ovpr0000sbmopoqu9i3t" // hard coded user id
@@ -70,7 +64,7 @@ export function AddNewCourseForm() {
 
       const courseId = state.field;
       console.log(courseId);
-      router.push(`course/${courseId}`);
+      router.push(`sumamrize/${courseId}`);
     });
   };
 
@@ -96,9 +90,9 @@ export function AddNewCourseForm() {
           </DialogHeader>
           <FieldSet>
             <FieldGroup className="grid grid-cols-2 gap-5">
-              {courseFormFields.map((field) => {
+              {summaryFormFields.map((field) => {
                 return (
-                  <CourseFormController
+                  <SummarFormController
                     key={field.name}
                     {...field}
                     form={form}

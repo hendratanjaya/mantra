@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef } from "react";
 import { UserProviderContext } from "../_providers/user-provider";
 import { Button } from "@/components/ui/button";
 import { MdSend } from "react-icons/md";
+import { useQuizFeeadbackStore } from "../_stores/use-quiz-feedback-store";
 
 export function ChatInput({
   formAction,
@@ -18,8 +19,11 @@ export function ChatInput({
 }) {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const divRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const userContext = useContext(UserProviderContext);
+  const { feedbackRequest, setQuizFeedbackRequest } = useQuizFeeadbackStore();
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -38,9 +42,24 @@ export function ChatInput({
     }
   }, [pending, pushNewMessage]);
 
+  // TO DO: MERGE ALL FLOW AUTOMATION AS A WHOLE WORKING PROCESS
+  useEffect(() => {
+    if (
+      feedbackRequest &&
+      !pending &&
+      textAreaRef.current &&
+      buttonRef.current
+    ) {
+      textAreaRef.current.value = feedbackRequest;
+      buttonRef.current.click();
+      pushNewMessage(feedbackRequest, "user");
+      setQuizFeedbackRequest("");
+    }
+  }, [feedbackRequest, setQuizFeedbackRequest, pending]);
+
   return (
     <div className="flex items-center w-full">
-      <form className="h-full w-full" action={formAction}>
+      <form ref={formRef} className="h-full w-full" action={formAction}>
         <textarea name="message" ref={textAreaRef} className="hidden" />
         <input name="user_id" type="hidden" value={userContext?.id} />
         <input name="course_id" type="hidden" value={courseId} />
@@ -50,11 +69,16 @@ export function ChatInput({
             ref={divRef}
             contentEditable="plaintext-only"
             onInput={handleInput}
-            data-placeholder="Ask Lilith"
+            data-placeholder="Ask me anything"
             className="py-2 px-4 bg-secondary rounded-l-2xl outline-0 text-sm flex-1 md:max-h-[200px] max-h-[100px] overflow-y-auto custom-scrollbar"
           />
           <div className="flex flex-col justify-end">
-            <Button type="submit" size={"icon"} className="rounded-l-none">
+            <Button
+              ref={buttonRef}
+              type="submit"
+              size={"icon"}
+              className="rounded-l-none"
+            >
               <MdSend />
             </Button>
           </div>

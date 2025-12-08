@@ -3,7 +3,7 @@
 import { cache, ReactNode } from "react";
 import { CourseContentProvider } from "./_providers/course-content-provider";
 import { prisma } from "@/utils/prisma";
-import { ChatHistoryProvider } from "./_providers/chat-history-provider";
+import { ChatHistoryProvider } from "../../_providers/chat-history-provider";
 
 const getCourseContent = cache(async (courseId: string) => {
   console.log("Fetching content list from db.. ");
@@ -14,7 +14,7 @@ const getCourseContent = cache(async (courseId: string) => {
   return courseContent;
 });
 const getChatHistory = cache(async (courseId: string) => {
-  console.log("Fetching chat history..");
+  console.log("Fetching chat history for course...");
   const chatHistory = await prisma.chat.findMany({
     where: { course_id: courseId },
     select: { sender: true, message: true },

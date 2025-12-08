@@ -7,12 +7,30 @@ import {
   FitViewOptions,
   useEdgesState,
   Edge,
+  useReactFlow,
+  ReactFlowProvider,
 } from "@xyflow/react";
 import { SimpleNode } from "./node";
 import "@xyflow/react/dist/style.css";
 // import { useIsMobile } from "@/hooks/use-mobile";
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { CourseContentContext } from "../_providers/course-content-provider";
+
+// function Flow({props}: {props: re}) {
+//   // you can access the internal state here
+//   const reactFlowInstance = useReactFlow();
+
+//   return <ReactFlow {...props} />;
+// }
+
+// // wrapping with ReactFlowProvider is done outside of the component
+// function FlowWithProvider(props) {
+//   return (
+//     <ReactFlowProvider>
+//       <Flow {...props} />
+//     </ReactFlowProvider>
+//   );
+// }
 
 export default function CourseContentFlow() {
   //const isMobile = useIsMobile()
@@ -30,7 +48,6 @@ export default function CourseContentFlow() {
         label: parsedContent.title,
         description: parsedContent.description,
         difficulty: parsedContent.difficulty,
-        timeSpent: content.time_spent,
         index: i + 1,
       },
       position: { x: i * 350, y },
@@ -49,16 +66,30 @@ export default function CourseContentFlow() {
     customBaseNode: SimpleNode,
   };
 
-  const [node, ,] = useNodesState(initialnodes);
+  const [nodes, ,] = useNodesState(initialnodes);
   const [edges, ,] = useEdgesState(defaultEdges);
   const fitViewOptions: FitViewOptions = {
     padding: 0.4,
   };
 
+  // const containerRef = useRef<HTMLDivElement>(null);
+  // const { fitView } = useReactFlow();
+
+  // useEffect(() => {
+  //   if (!containerRef.current) return;
+
+  //   const observer = new ResizeObserver(() => {
+  //     fitView({ padding: 0.2 });
+  //   });
+
+  //   observer.observe(containerRef.current);
+  //   return () => observer.disconnect();
+  // }, [fitView]);
+
   return (
     <div className="h-full w-full">
       <ReactFlow
-        defaultNodes={node}
+        defaultNodes={nodes}
         //edges={edges}
         defaultEdges={edges}
         nodeTypes={nodeTypes}
@@ -73,7 +104,7 @@ export default function CourseContentFlow() {
         elementsSelectable={true}
         // Optional if you also want to lock zooming
         zoomOnDoubleClick={false}
-        minZoom={1}
+        minZoom={0.8}
         maxZoom={5}
       >
         <Background />

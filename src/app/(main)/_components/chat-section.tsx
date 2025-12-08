@@ -8,7 +8,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 
-import { Chat } from "@/generated/prisma";
+import { Chat, Course } from "@/generated/prisma";
 import {
   useActionState,
   useCallback,
@@ -17,45 +17,79 @@ import {
   useRef,
   useState,
 } from "react";
-import { sendMessageToAI } from "../course/action";
 import { MessageStateResponse } from "../course/type";
 import { toast } from "sonner";
-import { ChatHistoryContext } from "../course/[course_id]/_providers/chat-history-provider";
 import { AssistantPersonaContext } from "../_providers/assistant-provider";
 import { ChatContext, ChatHistory, Metadata } from "@/lib/openai/type";
 import { CourseContentContext } from "../course/[course_id]/_providers/course-content-provider";
 import { useParams } from "next/navigation";
 import { ChatBubble } from "./chat-bubble";
 import { ChatInput } from "./chat-input";
+import { ChatHistoryContext } from "../_providers/chat-history-provider";
+import { QuizQuestionContext } from "../quiz/_providers/quiz-question-provider";
+import { ActiveQuestionContext } from "../quiz/_providers/active-quiz-provider";
+import { UserProviderContext } from "../_providers/user-provider";
+import { sendMessageToAI } from "../action";
+import { SummaryContentContext } from "../summarize/_providers/summary-content-provider";
 
 // THE MAIN COMPONENT
-export function ChatSection({ mode }: { mode: "regular" | "course" | "quiz" }) {
-  const { course_id, content_id } = useParams();
-  const courseId = course_id ? course_id.toString() : undefined;
-  const contentId = content_id ? content_id.toString() : undefined;
+export function ChatSection({
+  mode,
+  type,
+}: {
+  mode: "regular" | "course" | "quiz";
+  type?: "summary";
+}) {
+  const { course_id, content_id, quiz_id } = useParams();
+  const courseId = course_id ? String(course_id) : undefined;
+  const contentId = content_id ? String(content_id) : undefined;
+  const quizId = content_id ? String(quiz_id) : undefined;
 
   //global context used
-  const conversation = useContext(ChatHistoryContext);
+  const chatHistoryContext = useContext(ChatHistoryContext);
   const assistanContext = useContext(AssistantPersonaContext);
   const courseContentContext = useContext(CourseContentContext);
+  const quizQuestionContext = useContext(QuizQuestionContext);
+  const courseSummary = useContext(SummaryContentContext);
+  const userContext = useContext(UserProviderContext);
 
   const currentCourseContent = courseContentContext.find(
     (content) => content.id === contentId
   );
-  const conversationRef =
-    useRef<Pick<Chat, "message" | "sender">[]>(conversation);
-  const [renderTracker, triggerRender] = useState(0);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const chatHistory = Array.from(conversationRef.current || []);
+  const activeQuestionContext = useContext(ActiveQuestionContext);
 
-  const metadata =
-    mode !== "regular" ? currentCourseContent?.metadata || "" : "";
+  const [chatHistory, setChatHistory] =
+    useState<Pick<Chat, "message" | "sender">[]>(chatHistoryContext);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // const metadata =
+  //   mode === "course" && !type
+  //     ? currentCourseContent?.metadata || ""
+  //     : mode === "quiz"
+  //     ? quizQuestionContext?.metadata || ""
+  //     : "";
+
+  let metadata = "";
+  if (mode === "course" && type === "summary")
+    metadata = generateMetadataForCourseSummary(courseSummary);
+  else if (mode === "course") metadata = currentCourseContent?.metadata || "";
+  else if (mode === "quiz") metadata = quizQuestionContext?.metadata || "";
 
   const [state, formAction, pending] = useActionState(
     async (prevSate: MessageStateResponse | null, formData: FormData) => {
-      // TO-DO: FIX THE DAMN FUNCTION SO IT CAN REPLIES BASED ON CURRENT CONTEXT
+      //duct tape for tracking active question... not sure if this the right thing to do
+      const activeQuestionId = activeQuestionContext?.current;
+      const currentQuizContent = quizQuestionContext?.quizQuestion.find(
+        (question) => question.id === activeQuestionId
+      );
+
       const lastFiveChat = chatHistory.slice(-5, chatHistory.length);
-      const context = createContext(mode, metadata, lastFiveChat);
+      const context = createContext(
+        mode,
+        metadata,
+        lastFiveChat
+        // currentQuizContent?.question
+      );
       return sendMessageToAI(
         prevSate,
         formData,
@@ -70,8 +104,10 @@ export function ChatSection({ mode }: { mode: "regular" | "course" | "quiz" }) {
   const pushNewMessage = useCallback(
     (message: string, sender: "bot" | "user") => {
       if (message.trim()) {
-        conversationRef.current.push({ message: message.trim(), sender });
-        triggerRender((n) => ++n);
+        setChatHistory((prev) => [
+          ...prev,
+          { message: message.trim(), sender },
+        ]);
       }
     },
     []
@@ -90,7 +126,7 @@ export function ChatSection({ mode }: { mode: "regular" | "course" | "quiz" }) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [renderTracker]);
+  }, [chatHistory]);
 
   return (
     <Card className="h-full md:rounded-none border-none gap-0 py-0 pt-3 overflow-hidden">
@@ -101,7 +137,7 @@ export function ChatSection({ mode }: { mode: "regular" | "course" | "quiz" }) {
               <AvatarImage src={"https://github.com/shadcn.png"} />
             </Avatar>
           </div>
-          Lilith
+          AssistantName
         </div>
       </CardHeader>
       <CardContent className="w-full h-full bg-destructive p-3 space-y-3.5 overflow-y-auto custom-scrollbar">
@@ -127,7 +163,7 @@ export function ChatSection({ mode }: { mode: "regular" | "course" | "quiz" }) {
           pending={pending}
           pushNewMessage={pushNewMessage}
           courseId={mode === "course" ? courseId : undefined}
-          quizId={mode === "quiz" ? "" : undefined}
+          quizId={mode === "quiz" ? quizId : undefined}
         />
       </CardFooter>
     </Card>
@@ -136,24 +172,25 @@ export function ChatSection({ mode }: { mode: "regular" | "course" | "quiz" }) {
 
 /**
  * Helper for create context to send to LLM
+ * @param {string} metadata if parameter "type" is filled metadata is the summary content not stringified metadata
  */
 function createContext(
   mode: "regular" | "course" | "quiz",
   metadata: string,
-  chatHistory: ChatHistory[]
+  chatHistory: ChatHistory[],
+  quizQuestion?: string
 ): ChatContext {
   const parsed = mode !== "regular" ? (JSON.parse(metadata) as Metadata) : null;
 
   const metadataDescriptions = {
     regular: metadata || "No specific context provided",
-
     course: parsed
       ? [
           `Lesson ${parsed.order}: ${parsed.title}`,
           `Difficulty: ${parsed.difficulty}`,
-          `Duration: ~${parsed.estimated_duration} hours`,
+          `Duration: ~${parsed.estimated_duration || "not specified"} hours`,
           `\nKey Concepts:`,
-          ...parsed.key_concepts.map((concept) => `  • ${concept}`),
+          ...parsed.key_concepts.map((concept) => `  -${concept}`),
           `\nLearning Objective: ${parsed.learning_objective}`,
           `\nLesson Overview: ${parsed.description}`,
         ].join("\n")
@@ -163,8 +200,9 @@ function createContext(
       ? [
           `Quiz for Lesson ${parsed.order}: ${parsed.title}`,
           `Difficulty: ${parsed.difficulty}`,
-          `\nTopics to be tested:`,
-          ...parsed.key_concepts.map((concept) => `  • ${concept}`),
+          `Current active question: ${quizQuestion || "no question provided"}`,
+          `\nTopics to be discussed:`,
+          ...parsed.key_concepts.map((concept) => `  -${concept}`),
           `\nLearning Objective: ${parsed.learning_objective}`,
         ].join("\n")
       : "No quiz context available",
@@ -180,7 +218,6 @@ function createContext(
     regular:
       "General conversation mode. The assistant provides helpful answers on any topic, " +
       "with a focus on educational content and study-related questions.",
-
     course: parsed
       ? `Currently teaching lesson ${parsed.order} of the course. ` +
         `This ${
@@ -195,7 +232,7 @@ function createContext(
           ", "
         )}. ` +
         `Evaluate if they've achieved: ${parsed.learning_objective}. ` +
-        `Provide clear feedback and explanations for each answer.`
+        `Provide clear feedback and explanations for each question.`
       : "Interactive quiz session to test understanding of the lesson material.",
   };
 
@@ -205,4 +242,16 @@ function createContext(
     metadata: metadataDescriptions[mode],
     chatHistory,
   };
+}
+
+function generateMetadataForCourseSummary(course: Course | null): string {
+  return JSON.stringify({
+    order: 1,
+    title: course?.title || "",
+    difficulty: "normal",
+    estimated_duration: 0,
+    key_concepts: ["not provided"],
+    learning_objective: "Understand given material",
+    description: course?.summary || "not provided",
+  });
 }

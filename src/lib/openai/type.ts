@@ -1,5 +1,7 @@
 import { CourseFormData } from "@/app/(main)/_schemas/course";
 
+export type ValidRoles = "user" | "developer" | "assistant" | "system";
+
 export type AssistantContext = {
   name: string;
   style: keyof PromptStyleGuidance;
@@ -66,4 +68,22 @@ export type Metadata = {
   difficulty: string;
 };
 
-// quizContext = ...
+export type QuizContext = {
+  content_metadata: string; // stringified Metadata
+  language: string;
+};
+
+export type QuizQuestions = {
+  quiz_questions: Question[];
+};
+
+export type Question = {
+  question: string;
+  answer: string;
+  answer_list: string;
+};
+
+export type AnswerList = {
+  key: string;
+  label: string;
+};

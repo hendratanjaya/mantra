@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 function MarkdownRenderer({ text }: { text: string }) {
   return (
     <span className="markdown-chat-body">
-      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{text}</Markdown>;
+      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{text}</Markdown>
     </span>
   );
 }

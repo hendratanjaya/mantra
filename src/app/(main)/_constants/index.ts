@@ -1,5 +1,5 @@
 import { FaTasks } from "react-icons/fa";
-import { MdDashboard } from "react-icons/md";
+import { MdDashboard, MdOutlineDocumentScanner } from "react-icons/md";
 
 export const sidebarItems = [
   {
@@ -12,4 +12,9 @@ export const sidebarItems = [
     url: "/course",
     icon: FaTasks,
   },
+  {
+    title: "Summarize",
+    url: "/summarize",
+    icon: MdOutlineDocumentScanner
+  }
 ];

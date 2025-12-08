@@ -11,6 +11,10 @@ export type CourseFormStateResponse = StateResponse & {
   field: string | null;
 };
 
+export type GenerateQuizResponse = StateResponse & {
+  quiz: string | null;
+};
+
 export type CourseFieldControllerType = {
   name:
     | "title"
@@ -18,7 +22,6 @@ export type CourseFieldControllerType = {
     | "content_type"
     | "content_text"
     | "content_file"
-    | "content_url"
     | "difficulty_preference"
     | "learning_goal"
     | "prior_knowledge";

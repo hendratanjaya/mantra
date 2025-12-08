@@ -26,6 +26,7 @@ model User {
 
   course            Course[]
   session           Session[]
+  quiz              Quiz[]
   assistant_persona AssistantPersona?
   chat              Chat[]
 }
@@ -49,13 +50,15 @@ model AssistantPersona {
 model Course {
   id                 String    @id @default(cuid())
   title              String
-  progress           Int
-  summary            String 
+  topic              String 
+  summary            String
+  type               String
   created_at         DateTime  @default(now())
   updated_at         DateTime  @updatedAt
 
   content CourseContent[]
   chat Chat[]
+  quiz Quiz?
 
   user_id String
 
@@ -67,13 +70,10 @@ model CourseContent {
   title                 String
   difficulty_level      String
   order                 Int
-  time_spent            Int       @default(0)
   content               String
   metadata              String
   created_at            DateTime  @default(now())
   update_at             DateTime  @updatedAt
-
-  quiz     Quiz[]
 
   course_id String 
 
@@ -82,15 +82,18 @@ model CourseContent {
 
 model Quiz {
   id         String   @id @default(cuid())
+  metadata   String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
   quiz_question QuizQuestion[]
+  chat          Chat[]
 
-  course_content_id String
-  chat Chat[]
+  course_id      String @unique
+  user_id        String
 
-  course_content CourseContent @relation(references: [id], fields: [course_content_id], onDelete: Cascade)
+  user           User   @relation(references: [id], fields: [user_id], onDelete: Cascade)
+  course         Course @relation(references: [id], fields: [course_id], onDelete: Cascade)
 }
 
 model QuizQuestion {
@@ -98,11 +101,6 @@ model QuizQuestion {
   question    String
   answer      String
   answer_list String
-  status      Int       @default(0)
-  start_time  DateTime
-  end_time    DateTime?
-  hint_asked  Int
-  last_hint   String
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
 
@@ -111,13 +109,8 @@ model QuizQuestion {
   quiz Quiz @relation(references: [id], fields: [quiz_id], onDelete: Cascade)
 }
 
-model SystemPrompt {
-  id     String @id @default(cuid())
-  prompt String
-}
-
 model Session {
-  id         String  @id @default(cuid())
+  id         String   @id @default(cuid())
   expired_at DateTime 
   created_at DateTime @default(now())
   

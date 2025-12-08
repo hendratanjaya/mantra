@@ -48,9 +48,6 @@ export const SimpleNode = memo(
             <BaseNodeHeader className="border-b">
               <BaseNodeHeaderTitle className="text-sm text-center font-semibold">
                 Path {data.index}
-                <small className="block font-normal">
-                  time spent: {(data.timeSpent / 60).toFixed(2)} minutes
-                </small>
               </BaseNodeHeaderTitle>
             </BaseNodeHeader>
             <BaseNodeContent className="text-wrap text-center">

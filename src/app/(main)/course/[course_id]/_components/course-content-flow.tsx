@@ -34,20 +34,20 @@ import { CourseContentContext } from "../_providers/course-content-provider";
 
 export default function CourseContentFlow() {
   //const isMobile = useIsMobile()
-  const courseContent = useContext(CourseContentContext);
+  const { contentList } = useContext(CourseContentContext)!;
 
-  const initialnodes = courseContent.map((content, i) => {
+  const initialnodes = contentList.map((content, i) => {
     const metadata = content.metadata;
     const parsedContent = JSON.parse(metadata) as CMetadata;
     let y = (i % 2) * 500; // your alternating pattern
-    if (i === courseContent.length - 1) y = 205; // drop the last node lower
+    if (i === contentList.length - 1) y = 205; // drop the last node lower
     return {
       id: String(i + 1),
       data: {
         id: content.id,
-        label: parsedContent.title,
-        description: parsedContent.description,
-        difficulty: parsedContent.difficulty,
+        label: content.title,
+        description: i > 0 ? parsedContent.description : `Introduction`,
+        difficulty: i > 0 ? parsedContent.difficulty : "-",
         index: i + 1,
       },
       position: { x: i * 350, y },

@@ -63,8 +63,7 @@ export function AddNewSummaryForm() {
       // To Do render generated course into the dedicated page
 
       const courseId = state.field;
-      console.log(courseId);
-      router.push(`sumamrize/${courseId}`);
+      router.push(`summarize/${courseId}`);
     });
   };
 

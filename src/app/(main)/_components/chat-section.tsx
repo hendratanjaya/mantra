@@ -48,12 +48,12 @@ export function ChatSection({
   //global context used
   const chatHistoryContext = useContext(ChatHistoryContext);
   const assistanContext = useContext(AssistantPersonaContext);
-  const courseContentContext = useContext(CourseContentContext);
+  const { contentList } = useContext(CourseContentContext)!;
   const quizQuestionContext = useContext(QuizQuestionContext);
   const courseSummary = useContext(SummaryContentContext);
   const userContext = useContext(UserProviderContext);
 
-  const currentCourseContent = courseContentContext.find(
+  const currentCourseContent = contentList.find(
     (content) => content.id === contentId
   );
   const activeQuestionContext = useContext(ActiveQuestionContext);
@@ -188,7 +188,6 @@ function createContext(
       ? [
           `Lesson ${parsed.order}: ${parsed.title}`,
           `Difficulty: ${parsed.difficulty}`,
-          `Duration: ~${parsed.estimated_duration || "not specified"} hours`,
           `\nKey Concepts:`,
           ...parsed.key_concepts.map((concept) => `  -${concept}`),
           `\nLearning Objective: ${parsed.learning_objective}`,

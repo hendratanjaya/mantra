@@ -23,14 +23,7 @@ export type ChatContext = {
   chatHistory: ChatHistory[];
 };
 
-export type CourseContext = Pick<
-  CourseFormData,
-  | "title"
-  | "topic"
-  | "difficulty_preference"
-  | "learning_goal"
-  | "prior_knowledge"
->;
+export type CourseContext = CourseFormData;
 
 export type PromptToneGuidance = {
   friendly: string;
@@ -64,7 +57,6 @@ export type Metadata = {
   description: string;
   key_concepts: string[];
   learning_objective: string;
-  estimated_duration: number;
   difficulty: string;
 };
 
@@ -85,5 +77,28 @@ export type Question = {
 
 export type AnswerList = {
   key: string;
+  label: string;
+};
+
+export type DragAndDropQuiz = {
+  quizzes: DragAndDropQuizItems[];
+};
+
+export type DragAndDropQuizItems = {
+  blanks: DragAndDropBlanks[];
+  code: string;
+  id: string;
+  instruction: string;
+  options: DragAndDropOptions[];
+};
+
+export type DragAndDropBlanks = {
+  correctItemId: string;
+  id: string;
+  placeholder: string;
+};
+
+export type DragAndDropOptions = {
+  id: string;
   label: string;
 };

@@ -3,6 +3,7 @@ import { Course } from "@/generated/prisma";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Markdown from "react-markdown";
+import { useCourseStore } from "../course/_stores/use-course-store";
 
 export function CourseItem({
   course,

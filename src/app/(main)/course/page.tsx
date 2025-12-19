@@ -25,11 +25,13 @@ const getAllCourse = cache(async (userId: string) => {
   const courseList = await prisma.course.findMany({
     where: {
       user_id: userId,
+      type: "course",
     },
     select: {
       id: true,
       title: true,
       summary: true,
+      topic: true,
       created_at: true,
     },
   });

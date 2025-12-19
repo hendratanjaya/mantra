@@ -17,11 +17,8 @@ export type GenerateQuizResponse = StateResponse & {
 
 export type CourseFieldControllerType = {
   name:
-    | "title"
-    | "topic"
-    | "content_type"
-    | "content_text"
-    | "content_file"
+    | "content_option"
+    | "programming_language"
     | "difficulty_preference"
     | "learning_goal"
     | "prior_knowledge";
@@ -30,4 +27,10 @@ export type CourseFieldControllerType = {
   placeholder: string;
   description?: string;
   isTextArea?: boolean;
+  isSelect?: boolean;
 };
+
+export type CourseSelectField =
+  | "content_option"
+  | "programming_language"
+  | "difficulty_preference";

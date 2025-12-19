@@ -1,12 +1,9 @@
-import { Badge } from "@/components/ui/badge";
 import {
   BaseNode,
   BaseNodeContent,
   BaseNodeHeader,
   BaseNodeHeaderTitle,
 } from "@/components/ui/base-node";
-import { NodeAppendix } from "@/components/ui/node-appendix";
-import { Separator } from "@/components/ui/separator";
 import {
   NodeTooltip,
   NodeTooltipContent,
@@ -40,9 +37,6 @@ export const SimpleNode = memo(
         >
           {data.description}
         </NodeTooltipContent>
-        <NodeAppendix className="border-none bg-transparent">
-          <Badge className="bg-card text-foreground">{data.difficulty}</Badge>
-        </NodeAppendix>
         <Link href={`${pathName}/${data.id}`}>
           <BaseNode className="max-w-[200px] min-h-[100px] w-[200px]">
             <BaseNodeHeader className="border-b">

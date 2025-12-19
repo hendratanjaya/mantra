@@ -7,30 +7,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { contentTypeList, difficutlyPreferencesList } from "../_constants";
 
 export function SelectForm({
   onValueChange,
-  name,
+  options,
+  placeholder,
 }: {
   onValueChange: (val: string) => void;
-  name: string;
+  options: { value: string; label: string }[];
+  placeholder: string;
 }) {
-  const itemList =
-    name === "content_type" ? contentTypeList : difficutlyPreferencesList;
-  const placeHolder =
-    name === "content_type"
-      ? "Select content type"
-      : "Select your difficulty preference";
   return (
     <Select onValueChange={onValueChange}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue className="capitalize" placeholder={placeHolder} />
+        <SelectValue className="capitalize" placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent className="max-h-[180px]">
         <SelectGroup>
-          <SelectLabel>Choose one</SelectLabel>
-          {itemList.map((item) => (
+          <SelectLabel>Please pick one</SelectLabel>
+          {options.map((item) => (
             <SelectItem key={item.value} value={item.value}>
               {item.label}
             </SelectItem>

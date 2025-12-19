@@ -38,11 +38,9 @@ export function AddNewCourseForm() {
   const form = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
     defaultValues: {
-      title: "",
-      topic: "",
-      content_type: "content_text",
+      content_option: "",
+      programming_language: "",
       difficulty_preference: "beginner",
-      content_text: "",
       learning_goal: "",
       prior_knowledge: "",
     },

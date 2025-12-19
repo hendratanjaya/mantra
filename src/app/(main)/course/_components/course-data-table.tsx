@@ -7,7 +7,7 @@ import { AddNewCourseForm } from "./add-new-course-form";
 export function CourseDataTable({
   courses,
 }: {
-  courses: Pick<Course, "id" | "title" | "summary" | "created_at">[];
+  courses: Pick<Course, "id" | "title" | "summary" | "topic" | "created_at">[];
 }) {
   return (
     <div className="p-2 h-full flex flex-col gap-3">

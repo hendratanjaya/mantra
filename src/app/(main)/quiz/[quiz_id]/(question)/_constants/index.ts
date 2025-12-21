@@ -1,0 +1,61 @@
+export const buttonClickResponses = [
+  "Oh wow, bold choice.",
+  "You really picking ***that*** answer? Okay...",
+  "Interesting… **disastrously** interesting.",
+  "Alright *genius*, lock it in.",
+  "I would've chosen differently, but sure.",
+  "You know what? you do you.",
+  "Someone is cooking..",
+  "I wonder whats going on in that head, truly...",
+  "Well... well... well...",
+  "Huh… that's the one you went with? ***Interesting.***",
+  "Alright, I see the direction you're going. I won't say anything… ***yet.***",
+  "Bold vibe you got there, picking that.",
+  "You hovered over all four and still chose **_that_** one? Fascinating.",
+  "Mysterious choice. Are you doing a strategy or just vibing?",
+  "I can't tell if you're **confident** or just **chaotic**. Either way, love it.",
+  "Oh? ***That*** one? You're really leaning into the unpredictable today.",
+  "I don't know what you're planning, but I'm watching.",
+  "You chose that suspiciously fast… should I be worried?",
+  "I feel like you're trying to send a **message** with this choice.",
+  "That answer has… ***energy***. I'll say that much.",
+  "You pick that like you know a secret I don't.",
+  "You're either a ***genius*** or extremely unseriou, I can't tell which.",
+  "That choice feels very *you*. I'm not sure if that's good.",
+];
+
+export const randomInsults: Record<string, string[]> = {
+  "0": [
+    "Fine. I'm impressed",
+    "Look at you, getting everything right. Don't get cocky.",
+    "I guess even *you* can peak occasionally.",
+    "Tch… you're actually competent.",
+    "Well well… someone understood the assignment.",
+  ],
+  "1": [
+    "Fine… you're not *completely* hopeless. Barely.",
+    "Look at you, choosing answers like a functional human. Shocking.",
+    'Congrats, you passed the "didn\'t embarrass yourself" threshold.',
+  ],
+  "2": [
+    "Oh? So you decided to think, but only *halfway*. Cute.",
+    'This score screams, "I skimmed, and hoped for the best."',
+    "You're like… almost smart. Theoretical intelligence, maybe.",
+  ],
+  "3": [
+    "This is what happens when confidence outruns ability.",
+    "You really said, *Good enough*, and honestly, it wasn't.",
+    "A strong performance — if the goal was mediocrity.",
+  ],
+  "4": [
+    "Were you speedrunning wrongness? Because wow.",
+    "I've seen NPCs guess better than this.",
+    "Your score radiates pure chaos energy. Impressive, in a way.",
+  ],
+  "5": [
+    "**My condolences.** To your brain.",
+    "This isn't a score. This is a cry for help.",
+    "You didn't just miss the mark. You missed the entire *concept* of aiming.",
+    "Whatever method you used… please never use it again.",
+  ],
+};

@@ -17,14 +17,18 @@ datasource db {
 model User {
   id         String    @id @default(cuid())
   name       String
+  email      String    @unique
   username   String
-  password   String
-  avatar     String
+  password   String?
+  avatar     String?
   created_at DateTime  @default(now())
-  updated_at DateTime?
+  updated_at DateTime  @updatedAt
 
-  course           Course[]
-  AssistantPersona AssistantPersona?
+  course            Course[]
+  session           Session[]
+  quiz              Quiz[]
+  assistant_persona AssistantPersona?
+  chat              Chat[]
 }
 
 model AssistantPersona {
@@ -32,59 +36,64 @@ model AssistantPersona {
   name        String
   style       String
   description String
+  tone        String
+  depth       String
+  language    String
   created_at  DateTime  @default(now())
-  updated_at  DateTime?
+  updated_at  DateTime  @updatedAt
 
   user_id String @unique
 
-  user User @relation(references: [id], fields: [user_id])
+  user User @relation(references: [id], fields: [user_id], onDelete: Cascade)
 }
 
 model Course {
   id                 String    @id @default(cuid())
   title              String
-  progress           String
-  learning_conttext  String
-  additional_context String
+  topic              String 
+  summary            String
+  type               String
   created_at         DateTime  @default(now())
-  updated_at         DateTime?
+  updated_at         DateTime  @updatedAt
 
   content CourseContent[]
+  chat Chat[]
+  quiz Quiz?
 
   user_id String
 
-  user User @relation(references: [id], fields: [user_id])
+  user User @relation(references: [id], fields: [user_id], onDelete: Cascade)
 }
 
 model CourseContent {
   id                    String    @id @default(cuid())
   title                 String
-  summary               String
-  difficulty_level      String
-  time_spent            Int       @default(0)
-  last_prompt           String?
-  last_playground_input String?
+  order                 Int
   content               String
+  quiz                  String? // drag and drop quiz
+  metadata              String
   created_at            DateTime  @default(now())
-  update_at             DateTime?
+  update_at             DateTime  @updatedAt
 
-  quiz Quiz[]
+  course_id String 
 
-  course_id String
-
-  course Course @relation(references: [id], fields: [course_id])
+  course Course @relation(references: [id], fields: [course_id], onDelete: Cascade)
 }
 
 model Quiz {
-  id String @id @default(cuid())
+  id         String   @id @default(cuid())
+  metadata   String
   created_at DateTime @default(now())
-  updated_at DateTime?
+  updated_at DateTime @updatedAt
 
   quiz_question QuizQuestion[]
+  chat          Chat[]
 
-  course_content_id String
+  course_id      String @unique
+  user_id        String
 
-  course_content CourseContent @relation(references: [id], fields: [course_content_id])
+  user           User   @relation(references: [id], fields: [user_id], onDelete: Cascade)
+  course         Course @relation(references: [id], fields: [course_id], onDelete: Cascade)
 }
 
 model QuizQuestion {
@@ -92,20 +101,38 @@ model QuizQuestion {
   question    String
   answer      String
   answer_list String
-  status      Int       @default(0)
-  start_time  DateTime
-  end_time    DateTime?
-  hint_asked  Int
-  last_hint   String
   created_at  DateTime  @default(now())
-  updated_at  DateTime?
+  updated_at  DateTime  @updatedAt
 
   quiz_id String
 
-  quiz Quiz @relation(references: [id], fields: [quiz_id])
+  quiz Quiz @relation(references: [id], fields: [quiz_id], onDelete: Cascade)
 }
 
-model SystemPrompt {
-  id     String @id @default(cuid())
-  prompt String
+model Session {
+  id         String   @id @default(cuid())
+  expired_at DateTime 
+  created_at DateTime @default(now())
+  
+  user_id    String
+
+  user User @relation(references: [id], fields: [user_id])
+} 
+
+model Chat {
+  id         String @id @default(cuid())
+  mode       String // "regular" | "course" | "quiz"
+  sender     String // "user" | "bot"
+  message    String 
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user_id   String
+  course_id String?
+  quiz_id   String?
+
+  user   User    @relation(references: [id], fields: [user_id], onDelete: Cascade)
+  course Course? @relation(references: [id], fields: [course_id], onDelete: Cascade)
+  quiz   Quiz?   @relation(references: [id], fields: [quiz_id], onDelete: Cascade)
+
 }

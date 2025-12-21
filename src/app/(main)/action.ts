@@ -16,65 +16,64 @@ export const getUserFromCookies = cache(async () => {
   const cookiesStore = await cookies();
   const sessionToCheck = cookiesStore.get("session_id")?.value || "";
   try {
-    //if (!sessionToCheck) return null;
-    // const session = await prisma.session.findUnique({
-    //   where: { id: sessionToCheck },
-    //   include: {
-    //     user: {
-    //       select: {
-    //         id: true,
-    //         name: true,
-    //         username: true,
-    //         email: true,
-    //         avatar: true,
-    //         created_at: true,
-    //         updated_at: true,
-    //         assistant_persona: true,
-    //       },
-    //     },
-    //   },
-    // });
-    // const today = new Date();
-
-    // if (session) {
-    //   if (session.expired_at > today) return session;
-
-    //   await prisma.session.delete({ where: { id: sessionToCheck } });
-    // }
-
-    return {
-      user: {
-        id: "cmhe1ovpr0000sbmopoqu9i3t",
-        name: "sta-THICCC",
-        username: "staTHICCCC",
-        email: "staThic@mail.com",
-        avatar: "https://picsum.photos/id/22/200/200",
-        created_at: new Date(),
-        updated_at: new Date(),
-        assistant_persona: {
-          // hard coded
-          id: "id",
-          name: "Lilith",
-          style: "conversational",
-          description:
-            "Your name is Lilith, You answer my question while questioning how i can be so stupid, but you explain my question with detailed information anyway. You have a sharp glare almost disgust when i asked you a stupid question, but again you explain it to me anyway.",
-          tone: "casual",
-          depth: "intermediate",
-          language: "English",
-          created_at: new Date("2025-12-12"),
-          updated_at: new Date("2025-12-12"),
-          user_id: "id",
+    if (!sessionToCheck) return null;
+    const session = await prisma.session.findUnique({
+      where: { id: sessionToCheck },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+            avatar: true,
+            created_at: true,
+            updated_at: true,
+            assistant_persona: true,
+          },
         },
       },
-    };
+    });
+    const today = new Date();
+
+    if (session) {
+      if (session.expired_at > today) return session;
+
+      await prisma.session.delete({ where: { id: sessionToCheck } });
+    }
+
+    // return {
+    //   user: {
+    //     id: "cmhe1ovpr0000sbmopoqu9i3t",
+    //     name: "sta-THICCC",
+    //     username: "staTHICCCC",
+    //     email: "staThic@mail.com",
+    //     avatar: "https://picsum.photos/id/22/200/200",
+    //     created_at: new Date(),
+    //     updated_at: new Date(),
+    //     assistant_persona: {
+    //       // hard coded
+    //       id: "id",
+    //       name: "Lilith",
+    //       style: "conversational",
+    //       description:
+    //         "Your name is Lilith, You answer my question while questioning how i can be so stupid, but you explain my question with detailed information anyway. You have a sharp glare almost disgust when i asked you a stupid question, but again you explain it to me anyway.",
+    //       tone: "casual",
+    //       depth: "intermediate",
+    //       language: "English",
+    //       created_at: new Date("2025-12-12"),
+    //       updated_at: new Date("2025-12-12"),
+    //       user_id: "id",
+    //     },
+    //   },
+    // };
 
     return null;
   } catch (error) {
     logger.error(`Failed to validate session:${sessionToCheck}`);
     logger.error(error);
+    return null;
   }
-
-  return null;
 });
 
 export async function sendMessageToAI(
@@ -82,7 +81,7 @@ export async function sendMessageToAI(
   formData: FormData,
   context: ChatContext,
   assistantContext: AssistantContext,
-  mode: "regular" | "course" | "quiz" | "summary"
+  mode: "regular" | "course" | "quiz"
 ): Promise<MessageStateResponse> {
   try {
     const message = formData.get("message");
@@ -98,7 +97,7 @@ export async function sendMessageToAI(
 
     // console.log({ courseId });
 
-    // return { error: false, message: context.metadata, isNewMessage: true };
+    // return { error: false, message: "testing responds", isNewMessage: true };
 
     // return { error: false, message: "" }; // return nothing
 
@@ -131,15 +130,13 @@ export async function sendMessageToAI(
         quiz_id: undefined,
       };
 
-    // if (mode === "course" && courseId) opts.course_id = courseId.toString();
-    // if (mode === "quiz" && quizId) opts.quiz_id = quizId.toString();
+    if (mode === "course" && courseId) opts.course_id = courseId.toString();
+    if (mode === "quiz" && quizId) opts.quiz_id = quizId.toString();
 
-    // const [, respond] = await Promise.all([
-    //   saveMessageToDB(question, userId!.toString(), mode, "user", opts),
-    //   await generateRespond(),
-    // ]);
-
-    const respond = await generateRespond();
+    const [, respond] = await Promise.all([
+      saveMessageToDB(question, userId!.toString(), mode, "user", opts),
+      await generateRespond(),
+    ]);
 
     const cleanedContent = respond
       ?.replace(/<｜begin▁of▁sentence｜>/g, "")
@@ -148,13 +145,13 @@ export async function sendMessageToAI(
 
     if (!cleanedContent) throw new Error("Response from AI is empty");
 
-    // await saveMessageToDB(
-    //   cleanedContent,
-    //   userId!.toString(),
-    //   mode,
-    //   "bot",
-    //   opts
-    // );
+    await saveMessageToDB(
+      cleanedContent,
+      userId!.toString(),
+      mode,
+      "bot",
+      opts
+    );
 
     return { error: false, message: cleanedContent, isNewMessage: true };
   } catch (error) {

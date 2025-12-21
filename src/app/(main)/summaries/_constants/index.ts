@@ -19,6 +19,6 @@ export const summaryFormFields: SummaryFieldControllerType[] = [
     label: "Content File",
     placeholder: "File to summarize",
     description:
-      "File that relevant with topic you want to learn, this will help your assistant to understand and generate relevant topic (.pdf or .txt) ",
+      "File that relevant with topic you want to learn, this will help your assistant to understand and generate relevant topic (pdf) ",
   },
 ];

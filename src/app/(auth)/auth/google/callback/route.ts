@@ -1,6 +1,7 @@
 "use server";
 import { oauthState } from "@/app/(auth)/_constants";
 import {
+  createDefaultAssistant,
   createNewSession,
   createNewUser,
   getUserByEmail,
@@ -28,13 +29,15 @@ export async function GET(req: NextRequest) {
       const { name, picture, email } = userInfo;
 
       let user = await getUserByEmail(email);
-      if (!user)
+      if (!user) {
         user = await createNewUser({
           name,
           email,
           avatar: picture,
           username: name,
         });
+        await createDefaultAssistant(user.id);
+      }
 
       await createNewSession(user.id);
       await deleteCookie("codeVerifier");

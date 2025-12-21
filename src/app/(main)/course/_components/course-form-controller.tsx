@@ -23,7 +23,11 @@ export function CourseFormController({
   isTextArea,
   isSelect,
   form,
-}: CourseFieldControllerType & { form: UseFormReturn<CourseFormData> }) {
+  disabled,
+}: CourseFieldControllerType & {
+  form: UseFormReturn<CourseFormData>;
+  disabled: boolean;
+}) {
   const [charCounter, setCharCounter] = useState(0);
   const handleCharCount = <T extends HTMLInputElement | HTMLTextAreaElement>(
     e: ChangeEvent<T>
@@ -53,6 +57,7 @@ export function CourseFormController({
             <Textarea
               {...field}
               id={`course_${name}`}
+              disabled={disabled}
               aria-invalid={fieldState.invalid}
               placeholder={placeholder}
               onChange={(e) => {
@@ -65,6 +70,7 @@ export function CourseFormController({
             />
           ) : isSelect ? (
             <SelectForm
+              disabled={disabled}
               onValueChange={field.onChange}
               options={fielWithOptions[name as CourseSelectField]}
               placeholder={placeholder}
@@ -72,6 +78,7 @@ export function CourseFormController({
           ) : (
             <Input
               {...field}
+              disabled={disabled}
               id={`course_${name}`}
               aria-invalid={fieldState.invalid}
               placeholder={placeholder}

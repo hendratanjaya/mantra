@@ -3,23 +3,29 @@ import { SummartyDataTable } from "./_components/summary-data-table";
 import { prisma } from "@/utils/prisma";
 import { getUserFromCookies } from "../action";
 import { redirect } from "next/navigation";
+import { logger } from "@/utils/logger";
 
 const getAllSummary = cache(async (userId: string) => {
-  const courseList = await prisma.course.findMany({
-    where: {
-      user_id: userId,
-      type: "summary",
-    },
-    select: {
-      id: true,
-      title: true,
-      topic: true,
-      summary: true,
-      created_at: true,
-    },
-  });
-
-  return courseList;
+  try {
+    const courseList = await prisma.course.findMany({
+      where: {
+        user_id: userId,
+        type: "summary",
+      },
+      select: {
+        id: true,
+        title: true,
+        topic: true,
+        summary: true,
+        created_at: true,
+      },
+    });
+    return courseList;
+  } catch (error) {
+    logger.error("Failed to fetch all summary");
+    logger.error(error);
+    return [];
+  }
 });
 
 export default async function Page() {
@@ -31,10 +37,6 @@ export default async function Page() {
   return (
     <div className="h-full w-full">
       <SummartyDataTable courses={courseList} />
-
-      {/* <div className="col-span-1 overflow-y-auto">
-            <ChatSection conversation={chatHistory} />
-          </div> */}
     </div>
   );
 }

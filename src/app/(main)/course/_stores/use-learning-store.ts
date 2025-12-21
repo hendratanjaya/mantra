@@ -11,6 +11,8 @@ export type QuizResult = {
 
 type LearningStore = {
   attempts: Record<string, QuizResult> | null;
+  hint: number;
+  setHint: (hint: number) => void;
   recordAttempt: (pathId: string, results: QuizResult) => void;
   resetPath: (pathId: string) => void;
   resetAll: () => void;
@@ -18,7 +20,8 @@ type LearningStore = {
 
 export const useLearningStore = create<LearningStore>((set) => ({
   attempts: null,
-
+  hint: 0,
+  setHint: (hint) => set({ hint }),
   recordAttempt: (pathId, results) =>
     set((state) => ({
       attempts: {

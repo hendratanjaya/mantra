@@ -22,16 +22,18 @@ import { toast } from "sonner";
 import { AssistantPersonaContext } from "../../_providers/assistant-provider";
 import { AssistantContext } from "@/lib/openai/type";
 import { UserProviderContext } from "../../_providers/user-provider";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { LoaderCircle } from "lucide-react";
 
-export function AddNewCourseForm() {
+export function AddNewCourseForm({
+  isExceedLimit,
+}: {
+  isExceedLimit: boolean;
+}) {
   const [pending, startTransition] = useTransition();
-  const [redirecting, setRedirecting] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const assistantContext = useContext(
-    AssistantPersonaContext
-  ) as AssistantContext;
-  const userContext = useContext(UserProviderContext);
+  const assistantContext = useContext(AssistantPersonaContext)!;
+  const userContext = useContext(UserProviderContext)!;
 
   const router = useRouter();
 
@@ -47,14 +49,12 @@ export function AddNewCourseForm() {
   });
 
   const onSubmit = (data: CourseFormData) => {
-    console.log("masukk");
-
     startTransition(async () => {
+      toast.info("This might take a while");
       const state = await generateNewCourse(
         data,
-        assistantContext,
-        "cmhe1ovpr0000sbmopoqu9i3t" // hard coded user id
-        //userContext!.id
+        assistantContext.persona as AssistantContext,
+        userContext!.user!.id
       );
       if (state.error) {
         const message = state.message ?? "Oopss, something went wrong";
@@ -63,11 +63,8 @@ export function AddNewCourseForm() {
         form.reset();
         return;
       }
-      // New problem occured... Llama only support 10 max request....
-      // To Do render generated course into the dedicated page
-
+      toast.info("Redirecting...");
       const courseId = state.field;
-      console.log(courseId);
       router.push(`course/${courseId}`);
     });
   };
@@ -76,6 +73,11 @@ export function AddNewCourseForm() {
     <Dialog
       onOpenChange={(open) => {
         if (!open) form.reset();
+        else if (open && isExceedLimit) {
+          setOpenDialog(false);
+          toast.info("You've reached the 3-course limit.");
+          return;
+        }
         setOpenDialog(open);
       }}
       open={openDialog || pending}
@@ -100,6 +102,7 @@ export function AddNewCourseForm() {
                     key={field.name}
                     {...field}
                     form={form}
+                    disabled={pending}
                   />
                 );
               })}
@@ -107,12 +110,15 @@ export function AddNewCourseForm() {
           </FieldSet>
           <DialogFooter>
             <DialogClose asChild>
-              <Button disabled={pending} variant="outline">
-                Cancel
-              </Button>
+              {!pending && (
+                <Button disabled={pending} variant="outline">
+                  Cancel
+                </Button>
+              )}
             </DialogClose>
             <Button disabled={pending} type="submit">
-              Save changes
+              {pending ? "Generating..." : "Save changes"}
+              {pending && <LoaderCircle className="animate-spin" />}
             </Button>
           </DialogFooter>
         </form>

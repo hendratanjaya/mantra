@@ -7,18 +7,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { boolean } from "zod";
 
 export function SelectForm({
   onValueChange,
   options,
   placeholder,
+  disabled,
 }: {
   onValueChange: (val: string) => void;
   options: { value: string; label: string }[];
   placeholder: string;
+  disabled: boolean;
 }) {
   return (
-    <Select onValueChange={onValueChange}>
+    <Select onValueChange={onValueChange} disabled={disabled}>
       <SelectTrigger className="w-[180px]">
         <SelectValue className="capitalize" placeholder={placeholder} />
       </SelectTrigger>

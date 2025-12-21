@@ -1,4 +1,5 @@
 import { logger } from "@/utils/logger";
+import { prisma } from "@/utils/prisma";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -22,12 +23,11 @@ export async function POST(req: Request) {
   try {
     if (secret === internalSecret) {
       const { sessionId } = await req.json();
-      // const session = await prisma.session.findUnique({
-      //   where: { id: sessionId },
-      // });
+      const session = await prisma.session.findUnique({
+        where: { id: sessionId },
+      });
       const today = new Date();
-      // const valid = !!session && today < session.expired_at;
-      const valid = true;
+      const valid = !!session && today < session.expired_at;
       return NextResponse.json({ valid });
     }
   } catch (error) {

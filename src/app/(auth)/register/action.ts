@@ -4,7 +4,7 @@ import { prisma } from "@/utils/prisma";
 import { DataToValidate, RegisterFormData, AuthRespond } from "../types";
 import bcrypt from "bcryptjs";
 import { logger } from "@/utils/logger";
-import { createNewUser } from "../action";
+import { createDefaultAssistant, createNewUser } from "../action";
 
 export async function registerAction(
   formData: RegisterFormData
@@ -24,7 +24,14 @@ export async function registerAction(
     }
 
     const hashedPassword = await bcrypt.hash(password, 11);
-    await createNewUser({ name, username, email, password: hashedPassword });
+    const newUser = await createNewUser({
+      name,
+      username,
+      email,
+      password: hashedPassword,
+    });
+
+    await createDefaultAssistant(newUser.id);
 
     logger.info(`Register success for ${email}`);
     return { success: true, type: null, message: "Registration success" };
@@ -45,8 +52,6 @@ async function getUserByEmailOrUsername(email: string, username: string) {
 function validateDuplicateCredentials(
   data: DataToValidate
 ): AuthRespond<RegisterFormData> {
-  console.log(data);
-
   if (data.existingEmail === data.formEmail)
     return {
       success: false,

@@ -2,6 +2,7 @@
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { GiMagicHat } from "react-icons/gi";
 
 const NavLinks = () => {
   const pathName = usePathname();
@@ -30,9 +31,10 @@ export function AuthHeader() {
   return (
     <div className="flex h-full justify-between items-center px-4 py-6">
       <div className="flex items-center gap-x-2">
-        <Avatar>
+        {/* <Avatar>
           <AvatarImage src="https://github.com/shadcn.png"></AvatarImage>
-        </Avatar>
+        </Avatar> */}
+        <GiMagicHat className="size-5" />
         <h3 className="font-semibold">Mantra</h3>
       </div>
       <NavLinks />

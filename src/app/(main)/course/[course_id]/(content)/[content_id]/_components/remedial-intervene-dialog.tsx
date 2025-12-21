@@ -2,7 +2,6 @@ import { QuizResult } from "@/app/(main)/course/_stores/use-learning-store";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -33,7 +32,7 @@ export function RemedialInterveneDialog({
 
   return (
     <Dialog open={open}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto custom-scrollbar">
         <DialogHeader>
           <DialogTitle>Learning Progress Review</DialogTitle>
         </DialogHeader>

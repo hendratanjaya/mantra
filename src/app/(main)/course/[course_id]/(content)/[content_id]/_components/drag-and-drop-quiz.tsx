@@ -8,7 +8,6 @@ import {
   useDraggable,
   DragEndEvent,
 } from "@dnd-kit/core";
-import path from "path";
 import { Dispatch, SetStateAction, useState } from "react";
 
 export function checkAnswers(
@@ -99,15 +98,17 @@ export function DragDropQuiz({
 }) {
   const { code, blanks, options, instruction } = quiz;
   const { setQuizFeedbackRequest } = useQuizFeeadbackStore();
-
+  const { hint, setHint } = useLearningStore();
   function createFeedbackRequest() {
-    const base = `I'm currently doing some quiz, the instruction is to ${instruction}\n`;
-    const code = `This the provided code: ${quiz.code}\n`;
+    const base = `I'm currently doing some quiz, the instruction is to:\n ${instruction}\n`;
+    const quizCode = `This the provided code: ${code}\n`;
     const optionsLabel = quiz.options.map((o) => o.label);
-    const option = `and this the provided options ${optionsLabel.join(", ")}\n`;
+    const option = `and this the provided options ${optionsLabel.join(
+      ", "
+    )}\n\n`;
     const request = `Can you guide me for this question?`;
 
-    return base + code + option + request;
+    return base + quizCode + option + request;
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -135,7 +136,10 @@ export function DragDropQuiz({
       <div className="flex justify-between">
         <h3 className="mb-[12px]">{instruction}</h3>
         <Button
-          onClick={() => setQuizFeedbackRequest(createFeedbackRequest())}
+          onClick={() => {
+            setHint(hint + 1);
+            setQuizFeedbackRequest(createFeedbackRequest());
+          }}
           variant={"destructive"}
         >
           Hint

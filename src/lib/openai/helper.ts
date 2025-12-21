@@ -4,7 +4,6 @@ import {
   PromptToneGuidance,
 } from "./type";
 import { CanvasFactory } from "pdf-parse/worker";
-import { getHeader } from "pdf-parse/node";
 import { PDFParse } from "pdf-parse";
 import { UserException } from "../utils";
 
@@ -68,10 +67,16 @@ export function getDepthGuidance(depth: keyof PromptDepthGuidance): string {
 }
 
 export async function getPdfInfo(file: File) {
-  const buffer = await file.arrayBuffer();
-  const base64Pdf = Buffer.from(buffer).toString("base64");
-  // if(!result.isPdf)z
-  //   throw new UserException("Oops, we only accept PDF file", 400);
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  function isPdf(buffer: Buffer): boolean {
+    const header = buffer.subarray(0, 5).toString("ascii");
+    return header === "%PDF-";
+  }
+  if (!isPdf(buffer))
+    throw new UserException("Oops, we only accept PDF file", 400);
+
+  const base64Pdf = buffer.toString("base64");
 
   const pdf = new PDFParse({ data: buffer, CanvasFactory });
   const totalPages = (await pdf.getInfo()).total;

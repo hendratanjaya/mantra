@@ -18,7 +18,11 @@ export function SummarFormController({
   description,
   maxChar,
   form,
-}: SummaryFieldControllerType & { form: UseFormReturn<SummaryFormData> }) {
+  disabled,
+}: SummaryFieldControllerType & {
+  form: UseFormReturn<SummaryFormData>;
+  disabled: boolean;
+}) {
   const [charCounter, setCharCounter] = useState(0);
   const handleCharCount = (e: ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
@@ -44,8 +48,9 @@ export function SummarFormController({
           </FieldLabel>
           {name === "content_file" ? (
             <Input
+              disabled={disabled}
               type="file"
-              content="pdf,txt"
+              accept="application/pdf"
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 field.onChange(file ?? null);
@@ -57,6 +62,7 @@ export function SummarFormController({
           ) : (
             <Input
               {...field}
+              disabled={disabled}
               id={`course_${name}`}
               aria-invalid={fieldState.invalid}
               placeholder={placeholder}

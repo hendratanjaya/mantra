@@ -42,32 +42,6 @@ export const getUserFromCookies = cache(async () => {
       await prisma.session.delete({ where: { id: sessionToCheck } });
     }
 
-    // return {
-    //   user: {
-    //     id: "cmhe1ovpr0000sbmopoqu9i3t",
-    //     name: "sta-THICCC",
-    //     username: "staTHICCCC",
-    //     email: "staThic@mail.com",
-    //     avatar: "https://picsum.photos/id/22/200/200",
-    //     created_at: new Date(),
-    //     updated_at: new Date(),
-    //     assistant_persona: {
-    //       // hard coded
-    //       id: "id",
-    //       name: "Lilith",
-    //       style: "conversational",
-    //       description:
-    //         "Your name is Lilith, You answer my question while questioning how i can be so stupid, but you explain my question with detailed information anyway. You have a sharp glare almost disgust when i asked you a stupid question, but again you explain it to me anyway.",
-    //       tone: "casual",
-    //       depth: "intermediate",
-    //       language: "English",
-    //       created_at: new Date("2025-12-12"),
-    //       updated_at: new Date("2025-12-12"),
-    //       user_id: "id",
-    //     },
-    //   },
-    // };
-
     return null;
   } catch (error) {
     logger.error(`Failed to validate session:${sessionToCheck}`);

@@ -140,8 +140,8 @@ export function QuestionContent() {
                 <CarouselItem key={quizQ.id} className="h-full">
                   <Card className="h-full bg-muted/40 border-none rounded-none">
                     <CardHeader className="">
-                      <span className="text-xl md:text-3xl font-semibold">
-                        {quizQ.question}
+                      <span className="text-xl md:text-3xl font-medium">
+                        <Markdown>{quizQ.question}</Markdown>
                       </span>
                     </CardHeader>
 
@@ -177,8 +177,9 @@ export function QuestionContent() {
                                 : "hover:bg-muted/70"
                             }`}
                           >
-                            <span className="mr-2">{key}.</span>
-                            {label}
+                            <span className="mr-2 flex items-center">
+                              <Markdown>{`${key}. ${label}`}</Markdown>
+                            </span>
                           </button>
                         );
                       })}

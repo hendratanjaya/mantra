@@ -149,7 +149,7 @@ export function DragDropQuiz({
       <DndContext onDragEnd={handleDragEnd}>
         {/* CODE BLOCK */}
         <pre className="whitespace-pre-wrap leading-relaxed bg-gray-800 text-gray-100 p-3 rounded-md mb-4">
-          {code.split(/(___\d___)/g).map((segment, idx) => {
+          {code.split(/(___\d+___)/g).map((segment, idx) => {
             const blank = blanks.find((b) => b.placeholder === segment);
             if (!blank) return segment;
 

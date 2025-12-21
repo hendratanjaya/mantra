@@ -30,7 +30,4 @@ export type CourseFieldControllerType = {
   isSelect?: boolean;
 };
 
-export type CourseSelectField =
-  | "content_option"
-  | "programming_language"
-  | "difficulty_preference";
+export type CourseSelectField = "content_option" | "programming_language";

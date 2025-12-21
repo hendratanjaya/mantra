@@ -134,11 +134,11 @@ export function CourseContent({ id }: { id: string }) {
       quizAttempts += a.attempts;
     }
 
-    if (totalCorrect !== totalQuestions) {
-      // console.log({ attempts });
-      toast.error("You need to get every answer right!");
-      return null;
-    }
+    // if (totalCorrect !== totalQuestions) {
+    //   // console.log({ attempts });
+    //   toast.error("You need to get every answer right!");
+    //   return null;
+    // }
 
     const performance: QuizResult = {
       correct: totalCorrect,

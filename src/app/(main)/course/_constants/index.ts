@@ -16,12 +16,6 @@ export const courseFormFields: CourseFieldControllerType[] = [
     isSelect: true,
   },
   {
-    name: "difficulty_preference",
-    label: "Difficulty Preference",
-    placeholder: "What difficulty you want for conten to be generated?",
-    isSelect: true,
-  },
-  {
     name: "learning_goal",
     label: "Learning Goal",
     placeholder: "Your learning goal for this learning material",
@@ -37,11 +31,10 @@ export const courseFormFields: CourseFieldControllerType[] = [
   },
 ];
 
-const difficutlyPreferencesList = [
-  { value: "beginner", label: "Beginner" },
-  { value: "intermediate", label: "Intermediate" },
-  { value: "advanced", label: "Advanced" },
-];
+// const difficutlyPreferencesList = [
+//   { value: "beginner", label: "Beginner" },
+//   { value: "intermediate", label: "Intermediate" },
+// ];
 
 const programmingLanguageList = [
   { value: "java", label: "Java Programming" },
@@ -67,14 +60,6 @@ const contentOptionList = [
     label: "Looping",
   },
   {
-    value: "functions",
-    label: "Functions",
-  },
-  {
-    value: "data structures",
-    label: "Data Structures",
-  },
-  {
     value: "array",
     label: "Array",
   },
@@ -86,6 +71,6 @@ const contentOptionList = [
 
 export const fielWithOptions = {
   programming_language: programmingLanguageList,
-  difficulty_preference: difficutlyPreferencesList,
+  // difficulty_preference: difficutlyPreferencesList,
   content_option: contentOptionList,
 };

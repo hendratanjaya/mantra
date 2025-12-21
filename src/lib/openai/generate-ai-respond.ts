@@ -14,9 +14,12 @@ import {
 } from "openai/resources/index.mjs";
 import {
   getDepthGuidance,
+  getGoldenExamples,
   getPdfInfo,
   getStructureGuidelines,
+  getSyntaxPatterns,
   getToneGuidance,
+  getTopicExamples,
 } from "./helper";
 import { logger } from "@/utils/logger";
 import { UserException } from "../utils";
@@ -287,130 +290,255 @@ export async function generateCodeFillBlankQuiz(
   keyConcepts: string[],
   difficulty: "beginner" | "intermediate" | "advanced"
 ) {
-  const model = "qwen/qwen-2.5-72b-instruct";
+  const model = "qwen/qwen3-coder";
+  const topicExamples = getTopicExamples(topic, programmingLanguage);
+  const syntaxPatterns = getSyntaxPatterns(programmingLanguage);
+  const diff = difficulty === "advanced" ? "intermediate" : difficulty;
 
   const messages: ChatCompletionMessageParam[] = [
     {
       role: "system",
-      content: `
-You are an expert programming educator creating high-quality fill-in-the-blank coding exercises.
+      //       content: `
+      // ou are a Senior Technical Instructor. Your goal is to create precise, pedagogically sound drag-and-drop coding quizzes.
 
-Topic: ${topic}
-Programming language: ${programmingLanguage}
-Difficulty: ${difficulty}
-Key concepts: ${keyConcepts.join(", ")}
+      // ## WORKFLOW (FOLLOW RIGIDLY)
+      // Step 1: Write a 3-5 line snippet of valid, idiomatic code.
+      // Step 2: Identify 1-3 critical tokens to remove.
+      // Step 3: Replace every instance of a chosen token with a numbered placeholder (___1___, ___2___).
+      // Step 4: CROSS-CHECK INTEGRITY:
+      // - Every placeholder ID in the 'blanks' array MUST physically exist in the 'code' string.
+      // - The literal text of the correct answer must be 100% REMOVED from the 'code' string.
+      // - Every placeholder in the 'instruction' (e.g., ___2___) MUST exist in the 'code'.
 
-PEDAGOGICAL RULES (MANDATORY):
-1. Every blank MUST test a specific concept from: ${keyConcepts.join(", ")}
-2. Each blank MUST have a clear learning purpose that can be explained in one sentence
-3. NEVER create a blank that does not affect program logic or meaning
-4. NEVER create blanks for:
-   - variable names
-   - literal values
-   - formatting-only elements
-5. Each blank must have EXACTLY ONE correct answer
-6. All incorrect options must be plausible but clearly wrong in this context
-7. Prevent duplicated logic across blanks in the same question
-8. The completed code must reflect real-world, idiomatic usage
+      // ## PEDAGOGICAL RULES
+      // 1. ONLY test keywords, operators, or method names.
+      // 2. NEVER create blanks for literal values or formatting.
+      // 3. Instructions must follow: "Fill in ___1___ with [specific concept], ___2___ with [specific concept]".
+      // 4. Only one option must be correct for each blank.
 
-CODE RULES:
-- Blanks may be keywords, operators, method names, or full expressions
-- If a blank requires multiple tokens (e.g. "i += 1"), include the full expression
-- Do NOT add unnecessary statements just to insert blanks
-- The code should look like something a real developer would write
+      // ## SYNTAX SANITY
+      // - NO PSEUDO-CODE: Code must be 100% valid for the target language.
+      // - NO FAKE KEYWORDS: Never use 'global' in C, 'elif' in C, or 'var' in modern Java.
 
-FORMATTING RULES:
-- Use \\n for line breaks
-- Use consistent indentation
-- Each statement on its own line
-- No minified or one-line blocks
+      // ## GOLDEN EXAMPLES (FOLLOW THIS PATTERN)
+      // Example 1 (Multi-Placeholder Parity):
+      // {
+      //   "instruction": "Fill in ___1___ with the variable declaration, and ___2___ with the strict equality operator.",
+      //   "code": "___1___ age = 20;\\nif (age ___2___ 20) { ... }",
+      //   "blanks": [
+      //     { "id": "b1", "placeholder": "___1___", "correctItemId": "i1" },
+      //     { "id": "b2", "placeholder": "___2___", "correctItemId": "i2" }
+      //   ],
+      //   "options": [
+      //     { "id": "i1", "label": "let" },
+      //     { "id": "i2", "label": "===" },
+      //     { "id": "i3", "label": "==" }
+      //   ]
+      // }
+      // ${getGoldenExamples(programmingLanguage)}
+      // ${topicExamples}
+      // ${syntaxPatterns}
+      // `,
 
-FAILURE CONDITIONS (DO NOT VIOLATE):
-- Trivial or meaningless code
-- Blanks that could be swapped without changing correctness
-- Code that only exists to host blanks
-- Make sure the amount of blanks in the code match with the amount of item in field blanks
-- Each options should be distinct from each other
-  # Bad Options example(duplicate options): 
-    "options": [
-      { "id": "i1", "label": "System.out.print(str)" }, 
-      { "id": "i2", "label": "System.out.print(str)" },
-      { "id": "i3", "label": "System.out.println(str)" }
-    ]
-  # Good options example(each option is unique): 
-    "options": [
-      { "id": "i1", "label": "System.out.println(str)" }, 
-      { "id": "i2", "label": "scanner.next()" },
-      { "id": "i3", "label": "System.out.print(str)" }
-    ]
+      // content: `
+      // You are an expert programming educator creating fill-in-the-blank coding exercises.
 
-Code examples:
-Example 1 - Testing loops:
-  Code: "___1___ (int i = 0; i < 10; i___2___) {\\n printf(\\"%d\\\", i);\\n}"
+      // ${topicExamples}
 
-Example 2 - Testing conditionals: 
-  Code: "if (x > 0) {\\n return ___1___;\\n}\\n___2___ {\\n return ___3___;\\n}"
+      // PEDAGOGICAL RULES:
+      // 1. Every blank tests a specific concept from the key concepts above
+      // 2. Each blank has a clear learning purpose
+      // 3. Never create blanks for: variable names, literal values, or formatting
+      // 4. Each blank has EXACTLY ONE correct answer
+      // 5. Incorrect options must be plausible but clearly wrong in context
+      // 6. Code must reflect real-world, idiomatic usage
 
-ABSOLUTE CONSTRAINT:
-- Each blank must only accept ONE option that is both syntactically valid
-- AND semantically correct in that exact position.
-- The number of placeholders in the code (___1___, ___2___, etc.) MUST EXACTLY MATCH the number of objects in the "blanks" array.
-- NEVER include a blank in "blanks" that does not appear in the code.
-- If you cannot place all blanks naturally, REDUCE the number of blanks.
-- If more than one option could fit, REWRITE the code.
-- Options MUST be partitioned: Arithmetic operators ONLY appear in arithmetic blanks, Assignment operators ONLY appear in assignment blanks
-- Never mix operator categories in the same option list.
+      // CODE REQUIREMENTS:
+      // - Blanks can be keywords, operators, method names, or expressions
+      // - Use \\n for line breaks with consistent indentation
+      // - Write code a real developer would write (no artificial statements just for blanks)
 
+      // CODE SYNTAX RULES (CRITICAL):
+      // - The code with blanks replaced by "PLACEHOLDER" must be syntactically valid
+      // - Before creating blanks, write complete working code first
+      // - Then replace specific tokens with ___1___, ___2___, etc.
+      // - NEVER create code where blanks hide syntax errors
+      // - NEVER invent or mix syntax structures (e.g., do-while does NOT take initialization like for loops)
+      // - NEVER generate code that would not compile in the target language
+
+      // INVALID SYNTAX PATTERNS (NEVER GENERATE):
+
+      // Common across all languages:
+      // ❌ "do (init; condition;) { }" - do-while doesn't have for-loop syntax
+      // ❌ "for { }" - for loop requires parentheses with conditions
+      // ❌ "while (x) { } else { }" - while loops don't have else clauses
+      // ❌ "if (x = 0)" as a condition test - assignment instead of comparison (should be ==)
+      // ❌ "array[array.length]" - off-by-one error (should be array.length - 1)
+      // ❌ "for (i > 0; i < 10; i++)" - wrong initialization (should be i = 0)
+
+      // ${syntaxPatterns}
+      // Example of INVALID approach:
+      // - Step 1: Write "return isNaN result ? result : defaultValue;"  // Missing ()
+      // - Step 2: Add blanks: "return ___1___ result ? result : defaultValue;"
+      // - Step 3: No option can fix the missing parentheses - quiz is broken!
+
+      // Example of VALID approach:
+      // ✓ Step 1: Write "return isNaN(result) ? result : defaultValue;"  // Complete, working code
+      // ✓ Step 2: Identify what to test: the ternary operator (? and :)
+      // ✓ Step 3: Replace with blanks: "return isNaN(result) ___1___ result ___2___ defaultValue;"
+      // ✓ Step 4: Create 3 options where "?" is correct for ___1___, ":" is correct for ___2___, and add 1 plausible wrong answer
+
+      // STATEMENT INTEGRITY RULE (CRITICAL):
+      // - After replacing tokens with placeholders, every line must still represent a valid grammatical statement
+      // - Placeholders must NOT create:
+      //   - dangling operators (e.g., "= x + 1;")
+      //   - missing left-hand sides
+      //   - missing right-hand sides
+      //   - incomplete expressions
+
+      // BLANK SOLVABILITY RULE:
+      // - For every placeholder, there MUST exist at least one option which, when substituted,
+      //   produces a syntactically valid and complete statement
+      // - If no such substitution exists, the quiz is invalid and must be regenerated
+
+      // CRITICAL: BLANK-PLACEHOLDER MATCHING
+      // - Count placeholders in code (___1___, ___2___, ___3___)
+      // - "blanks" array length MUST EXACTLY MATCH placeholder count
+      // - Example: "___1___ x = ___2___;" → 2 items in blanks array
+      // - If code has ___1___ and ___2___, never include blank3 in the array
+
+      // INVALID BLANK PATTERNS (NEVER DO THIS):
+      // - "___1___ let x = 5;" - keyword already present, nothing to fill
+      // - "console.___1___log();" - placeholder splits a word
+      // - "let x ___1___ = 5;" - placeholder in wrong position
+
+      // VALID BLANK PATTERNS:
+      // ✓ "___1___ x = 5;" - filling in declaration keyword (let/const/var)
+      // ✓ "x ___1___ 1;" - filling in operator (+=, -=, =)
+      // ✓ "console.___1___();" - filling in method name (log, error, warn)
+
+      // INSTRUCTION RULES:
+      // - Instructions must specify what concept each blank tests
+      // - Use format: "Fill in ___1___ with [specific concept], ___2___ with [specific concept]"
+      // - Make the correct answer obvious through clear descriptions
+      // - Never use vague instructions like "Complete the code" or "Fill in the blanks"
+
+      // Instruction examples:
+      // ✓ "Fill in ___1___ with the loop keyword for definite iteration, ___2___ with the increment operator"
+      // ✓ "Complete ___1___ with the declaration keyword for constants"
+      // ✓ "Fill in ___1___ with the ternary operator's question mark, ___2___ with the colon separator"
+
+      // When options could be ambiguous, use instructions to clarify:
+      // - Instead of: "Declare a variable" → Use: "Declare a block-scoped variable that can be reassigned"
+      // - This makes "let" correct over "const" or "var"
+
+      // OPTIONS RULES:
+      // - All 3 options must have unique labels (no duplicate text)
+      // - Multiple blanks CAN share the same correct answer by referencing the same option ID
+      // - If two blanks need the same answer (e.g., both need "if"), both blanks should use the same correctItemId
+      // - NEVER create duplicate options with different IDs - reuse the same option ID instead
+
+      // Example - CORRECT (two blanks share one option):
+      // {
+      //   "code": "___1___ (x > 0) {\n  // doSomething\n};\n___2___ (y > 0) {\n  // doSomething\n}",
+      //   "blanks": [
+      //     { "id": "blank1", "placeholder": "___1___", "correctItemId": "i1" },
+      //     { "id": "blank2", "placeholder": "___2___", "correctItemId": "i1" }  // Same ID as blank1
+      //   ],
+      //   "options": [
+      //     { "id": "i1", "label": "if" },      // Used by both blank1 AND blank2
+      //     { "id": "i2", "label": "while" },
+      //     { "id": "i3", "label": "for" }
+      //   ]
+      // }
+
+      // Example - WRONG (duplicate options):
+      // {
+      //   "blanks": [
+      //     { "id": "blank1", "placeholder": "___1___", "correctItemId": "i1" },
+      //     { "id": "blank2", "placeholder": "___2___", "correctItemId": "i2" }
+      //   ],
+      //   "options": [
+      //     { "id": "i1", "label": "if" },
+      //     { "id": "i2", "label": "if" },      // Duplicate! Should reuse i1
+      //     { "id": "i3", "label": "while" }
+      //   ]
+      // }
+
+      // VALIDATION CHECKLIST:
+      // ☐ Placeholders in code = Items in blanks array
+      // ☐ Each placeholder (___1___, ___2___) appears in code
+      // ☐ All option labels are unique (no duplicates)
+      // ☐ If multiple blanks need the same answer, they reference the same option ID
+      // ☐ Code with correct answers filled-in runs without syntax errors
+      // ☐ Only one option is correct for each blank
+      // `,
+
+      content: `## ROLE
+You are a Senior Software Engineer creating coding quizzes. Your goal is 100% structural parity between instructions and code.
+
+## REASONING WORKFLOW
+1. Select a 3-5 line snippet of valid ${programmingLanguage}.
+2. Replace 1-3 tokens with ___1___, ___2___, etc.
+3. MENTAL CHECK: If you replace the blanks with the correct options, does the code compile? It MUST.
+4. PARITY CHECK: The number of placeholders in the instruction, code, and blanks array must be identical.
+
+## GOLDEN EXAMPLE
+${getGoldenExamples(programmingLanguage)}
+
+## TOPIC CONSTRAINTS
+${getTopicExamples(topic, programmingLanguage)}
+
+## INVALID BLANK PATTERNS (NEVER DO THIS):
+- "___1___ let x = 5;" - keyword already present, nothing to fill
+- "console.___1___log();" - placeholder splits a word
+- "let x ___1___ = 5;" - placeholder in wrong position
+
+## VALID BLANK PATTERNS:
+✓ "___1___ x = 5;" - filling in declaration keyword (let/const/var)
+✓ "x ___1___ 1;" - filling in operator (+=, -=, =)
+✓ "console.___1___();" - filling in method name (log, error, warn)
+
+## BLANK-PLACEHOLDER MATCHING
+- Count placeholders in code (___1___, ___2___, ___3___)
+- "blanks" array length MUST EXACTLY MATCH placeholder count
+- Example: "___1___ x = ___2___;" → 2 items in blanks array
+- If code has ___1___ and ___2___, never include blank3 in the array
+
+## OPTIONS RULES:
+- All 3 options must have unique labels (no duplicate text)
+- Multiple blanks CAN share the same correct answer by referencing the same option ID
+- If two blanks need the same answer (e.g., both need "if"), both blanks should use the same correctItemId
+- NEVER create duplicate options with different IDs - reuse the same option ID instead
+
+## OUTPUT FORMAT
+Return JSON:
+{
+  "quizzes": [
+    {
+      "id": "q1",
+      "instruction": "Fill in ___1___ with [concept], ___2___ with [concept]",
+      "code": "code with placeholders",
+      "blanks": [{ "id": "b1", "placeholder": "___1___", "correctItemId": "i1" }],
+      "options": [{ "id": "i1", "label": "correct_token" }, { "id": "i2", "label": "wrong" }, { "id": "i3", "label": "wrong" }]
+    }
+  ]
+}
 `,
     },
     {
       role: "user",
       content: `
-        Generate 2 fill-in-the-blank questions that test understanding of ${keyConcepts.join(
-          ", "
-        )}.
-        
-        Use this exact JSON schema:
-        {
-          "quizzes": [
-            {
-              "id": "quiz1",
-              "type": "fill-in-the-blank",
-              "instruction": "[hint of what each blank should be]",
-              "code": "string with ___1___ and ___2___ placeholders",
-              "blanks": [
-                { 
-                  "id": "blank1", 
-                  "placeholder": "___1___", 
-                  "correctItemId": "i1" 
-                },
-                { 
-                  "id": "blank2", 
-                  "placeholder": "___2___", 
-                  "correctItemId": "i2" 
-                },
-              ],
-              "options": [
-                { "id": "i1", "label": "correct answer for blank1" },
-                { "id": "i2", "label": "correct answer for blank2" },
-                { "id": "i3", "label": "wrong option" }
-              ]
-            }
-          ]
-        }
-        
-        Make sure:
-        - Each question has 2-3 blanks
-        - Blanks in question match with the amount of item in field "blanks"
-        - Each option should be unique and distinct from each other
-        - Each question has 3 options (one answer for each question)
-        - Prevent ambiguous question
-        - The code makes sense with the correct answers filled in
-        - Test actual programming concepts, not variable naming
-      `,
+Generate 2 unique fill-in-the-blank questions for:
+Topic: ${topic}
+Language: ${programmingLanguage}
+Difficulty: ${difficulty}
+Key concepts: ${keyConcepts.join(", ")}
+
+Requirement: Ensure total parity between placeholders in code, instruction, and blanks array.
+`,
     },
   ];
-
   const responseFormat: ResponseFormatJSONSchema = {
     type: "json_schema",
     json_schema: {
@@ -429,12 +557,20 @@ ABSOLUTE CONSTRAINT:
               properties: {
                 id: { type: "string" },
                 type: { type: "string", enum: ["fill-in-the-blank"] },
-                instruction: { type: "string" },
-                code: { type: "string" },
+                instruction: {
+                  type: "string",
+                  description: "hint of what each blank should accomplish",
+                },
+                code: {
+                  type: "string",
+                  description:
+                    "The code snippet. CRITICAL: If you define 2 blanks, the strings '___1___' and '___2___' MUST both appear in this code. Do not leave the correct answer literal in the code.",
+                },
                 blanks: {
                   type: "array",
-                  minItems: 2,
+                  minItems: 1,
                   maxItems: 3,
+                  description: "Must match number of placeholders in code",
                   items: {
                     type: "object",
                     required: ["id", "placeholder", "correctItemId"],
@@ -479,7 +615,13 @@ ABSOLUTE CONSTRAINT:
     },
   };
 
-  const aiRespond = getRespond(model, messages, responseFormat, "content");
+  const aiRespond = await getRespond(
+    model,
+    messages,
+    responseFormat,
+    "content"
+  );
+
   return aiRespond;
 }
 export async function generateCourseIntroduction(
@@ -563,7 +705,7 @@ export async function generateCourseMetadata(context: CourseContext) {
         `Each path should:\n` +
         `- Focus on a different aspect of the topic\n` +
         `- Be teachable as a standalone module\n` +
-        `- Progress logically (path 1 = foundational, path 3 = advanced/applied)\n` +
+        `- Progress logically (path 1 = foundational, path 3 = intermediate/slightly harder)\n` +
         `- Have clear learning value\n` +
         `- Be specific and actionable\n\n` +
         `Target difficulty: ${difficulty_preference}\n` +
@@ -657,7 +799,7 @@ export async function generateRemedialIntervention(
   performance: QuizResult,
   assistantContext: AssistantContext
 ) {
-  const model = "meta-llama/llama-3.3-70b-instruct:free";
+  const model = "openai/gpt-4o-mini";
   const messages: ChatCompletionMessageParam[] = [
     {
       role: "system",
@@ -799,7 +941,7 @@ export async function generateQuizQuestion(
         "Guidelines:\n" +
         "1. Each question must have exactly 4 options (A, B, C, D)\n" +
         "2. Questions should test understanding of the key concepts\n" +
-        "3. Mix difficulty levels (2 easy, 2 medium, 1 hard)\n" +
+        "3. Mix difficulty levels (2 easy, 2 medium, 1 hard )\n" +
         "4. Make questions clear and unambiguous\n" +
         "5. Ensure correct answers are accurate\n" +
         "6. Make incorrect options plausible but clearly wrong\n" +
@@ -809,6 +951,7 @@ export async function generateQuizQuestion(
         "- For conceptual topics: Test understanding, not memorization\n" +
         "- For applied topics: Use real-world examples\n" +
         "- Avoid trick questions\n" +
+        "- Avoid duplicate options, make sure every option is unique for each question\n" +
         "\n" +
         "Each question should directly relate to one of the key concepts provided.\n" +
         "Formatting Rules (IMPORTANT):\n" +
@@ -856,6 +999,8 @@ export async function generateQuizQuestion(
           quiz_questions: {
             type: "array",
             description: `Array of exactly ${total} quiz questions`,
+            minItems: total,
+            maxItems: total,
             items: {
               type: "object",
               properties: {
@@ -870,8 +1015,8 @@ export async function generateQuizQuestion(
                 },
                 answer_list: {
                   type: "array",
-                  minItems: total,
-                  maxItems: total,
+                  minItems: 4,
+                  maxItems: 4,
                   items: {
                     type: "object",
                     properties: {

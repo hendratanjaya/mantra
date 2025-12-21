@@ -3,28 +3,42 @@ import { cache, ReactNode } from "react";
 import { prisma } from "@/utils/prisma";
 import { QuizQuestionProvider } from "../_providers/quiz-question-provider";
 import { ChatHistoryProvider } from "../../_providers/chat-history-provider";
-import { metadata } from "@/app/layout";
+import { logger } from "@/utils/logger";
+import { redirect } from "next/navigation";
 const getQuiz = cache(async (quizId: string) => {
   console.log("Fetching quiz list from db.. ");
-  const courseContent = await prisma.quiz.findFirst({
-    where: { id: quizId },
-    select: {
-      metadata: true,
-      quiz_question: {
-        select: { id: true, question: true, answer: true, answer_list: true },
+
+  try {
+    const courseContent = await prisma.quiz.findFirst({
+      where: { id: quizId },
+      select: {
+        metadata: true,
+        quiz_question: {
+          select: { id: true, question: true, answer: true, answer_list: true },
+        },
       },
-    },
-  });
-  return courseContent;
+    });
+    return courseContent;
+  } catch (error) {
+    logger.error("Failed to fetch quizzes");
+    logger.error(error);
+    return null;
+  }
 });
 const getChatHistory = cache(async (quizId: string) => {
   console.log("Fetching chat history for course...");
-  const chatHistory = await prisma.chat.findMany({
-    where: { quiz_id: quizId },
-    select: { sender: true, message: true },
-    orderBy: { created_at: "asc" },
-  });
-  return chatHistory;
+  try {
+    const chatHistory = await prisma.chat.findMany({
+      where: { quiz_id: quizId },
+      select: { sender: true, message: true },
+      orderBy: { created_at: "asc" },
+    });
+    return chatHistory;
+  } catch (error) {
+    logger.error("Failed to fetch quiz chat");
+    logger.error(error);
+    return [];
+  }
 });
 export default async function QuizLayout({
   children,
@@ -38,19 +52,18 @@ export default async function QuizLayout({
   //   //redirect back to /quiz
   //   return;
   // }
-  const [quiz , chatHistory] = await Promise.all([
+  const [quiz, chatHistory] = await Promise.all([
     getQuiz(quiz_id),
     getChatHistory(quiz_id),
   ]);
   if (!quiz) {
-    //redirect backt to /quiz return;
+    redirect("/home");
     return;
   }
   const quizData = {
     metadata: quiz.metadata,
     quizQuestion: quiz.quiz_question,
   };
-  // const quizData = {
   //   metadata: JSON.stringify({
   //     order: 1,
   //     title: "Java Fundamentals: Introduction and Setup",

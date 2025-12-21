@@ -10,7 +10,6 @@ import { logger } from "@/utils/logger";
 import { Prisma } from "@/generated/prisma";
 import { oauthState } from "./_constants";
 import { createCookie, deleteCookie } from "../_actions/action";
-import { cookies } from "next/headers";
 
 export async function continueWithGoogleAction() {
   const state = arctic.generateState();
@@ -54,7 +53,7 @@ export async function createNewSession(userId: string): Promise<boolean> {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        expires: expiredDate,
+        expires: new Date(Date.now() * 1000 * 60 * 60 * 48),
       });
 
       return cookie;
@@ -76,6 +75,26 @@ export async function createNewUser(data: Prisma.UserCreateInput) {
     });
   } catch (error) {
     logger.error(`Failed to create new user: ${data.email}`);
+    throw error;
+  }
+}
+
+export async function createDefaultAssistant(userId: string) {
+  try {
+    return await prisma.assistantPersona.create({
+      data: {
+        user_id: userId,
+        name: "Mantra Assistant",
+        style: "structured",
+        tone: "friendly",
+        depth: "intermediate",
+        language: "english",
+        description:
+          "A helpful assistant that provides clear, accurate, and easy-to-understand responses.",
+      },
+    });
+  } catch (error) {
+    logger.error(`Failed to create default persona for ${userId}`);
     throw error;
   }
 }

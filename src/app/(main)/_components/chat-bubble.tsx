@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { BsDot } from "react-icons/bs";
 import Markdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
@@ -16,10 +16,12 @@ export function ChatBubble({
   chat,
   pending,
   useAnimation,
+  setUseAnimation,
 }: {
   chat: { message: string; sender: string };
   pending?: boolean;
   useAnimation?: boolean;
+  setUseAnimation?: (animated: boolean) => void;
 }) {
   const LoadingChat = () => (
     <div className="flex items-center">
@@ -33,7 +35,6 @@ export function ChatBubble({
   const TypingMessage = ({ text }: { text: string }) => {
     const [messageDisplayed, setMessageDisplayed] = useState("");
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-
     useEffect(() => {
       setMessageDisplayed("");
       let i = 0;
@@ -46,6 +47,7 @@ export function ChatBubble({
           setMessageDisplayed((prev) => prev + charToAdd);
           i++;
         } else {
+          if (setUseAnimation) setUseAnimation(false);
           if (timerRef.current) clearInterval(timerRef.current);
         }
       }, 10);

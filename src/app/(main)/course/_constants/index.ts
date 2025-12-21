@@ -2,41 +2,24 @@ import { CourseFieldControllerType } from "../type";
 
 export const courseFormFields: CourseFieldControllerType[] = [
   {
-    name: "title",
-    label: "Course Title",
-    placeholder: "Input course title",
-    maxChar: 100,
-  },
-  {
-    name: "topic",
-    label: "Course Topic",
-    placeholder: "Whats this course about?",
-    maxChar: 100,
-    description: "Quick brief of topic you want to learn",
-  },
-  {
-    name: "content_type",
-    label: "Content Type",
-    placeholder: "",
+    name: "content_option",
+    label: "Material",
+    placeholder: "Pick learning material",
     description: "Pick type of content to provide as additional context",
+    isSelect: true,
   },
   {
-    name: "content_text",
-    label: "Content",
-    placeholder: "Reference",
-    isTextArea: true,
-  },
-  {
-    name: "content_file",
-    label: "Content File",
-    placeholder: "Reference to file",
-    description:
-      "File that relevant with topic you want to learn, this will help your assistant to understand and generate relevant topic (.pdf or .txt) ",
+    name: "programming_language",
+    label: "Programming Languange",
+    placeholder: "Programming language to learn",
+    description: "Pick your preferred programming language to learn",
+    isSelect: true,
   },
   {
     name: "difficulty_preference",
     label: "Difficulty Preference",
     placeholder: "What difficulty you want for conten to be generated?",
+    isSelect: true,
   },
   {
     name: "learning_goal",
@@ -54,13 +37,55 @@ export const courseFormFields: CourseFieldControllerType[] = [
   },
 ];
 
-export const difficutlyPreferencesList = [
+const difficutlyPreferencesList = [
   { value: "beginner", label: "Beginner" },
   { value: "intermediate", label: "Intermediate" },
   { value: "advanced", label: "Advanced" },
 ];
 
-export const contentTypeList = [
-  { value: "content_text", label: "Plain Text" },
-  { value: "content_file", label: "File" },
+const programmingLanguageList = [
+  { value: "java", label: "Java Programming" },
+  { value: "C", label: "C Programming" },
+  { value: "javascript", label: "Javascript Programming" },
 ];
+
+const contentOptionList = [
+  {
+    value: "variables and data types",
+    label: "Varibles and data types",
+  },
+  {
+    value: "operator and expressions",
+    label: "Operator and Expressions",
+  },
+  {
+    value: "coditionals",
+    label: "Conditionals",
+  },
+  {
+    value: "looping",
+    label: "Looping",
+  },
+  {
+    value: "functions",
+    label: "Functions",
+  },
+  {
+    value: "data structures",
+    label: "Data Structures",
+  },
+  {
+    value: "array",
+    label: "Array",
+  },
+  {
+    value: "input and output",
+    label: "Input and Output",
+  },
+];
+
+export const fielWithOptions = {
+  programming_language: programmingLanguageList,
+  difficulty_preference: difficutlyPreferencesList,
+  content_option: contentOptionList,
+};

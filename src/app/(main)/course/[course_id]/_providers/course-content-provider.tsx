@@ -1,9 +1,15 @@
 "use client";
 
 import { CourseContent } from "@/generated/prisma";
-import { createContext, ReactNode } from "react";
+import { createContext, ReactNode, useState } from "react";
 
-export const CourseContentContext = createContext<CourseContent[]>([]);
+type CourseContentContextType = {
+  contentList: CourseContent[];
+  setContentList: React.Dispatch<React.SetStateAction<CourseContent[]>>;
+};
+export const CourseContentContext =
+  createContext<CourseContentContextType | null>(null);
+
 export function CourseContentProvider({
   children,
   courseContentList,
@@ -11,8 +17,11 @@ export function CourseContentProvider({
   children: ReactNode;
   courseContentList: CourseContent[];
 }) {
+  const [contentList, setContentList] =
+    useState<CourseContent[]>(courseContentList);
+
   return (
-    <CourseContentContext.Provider value={courseContentList}>
+    <CourseContentContext.Provider value={{ contentList, setContentList }}>
       {children}
     </CourseContentContext.Provider>
   );

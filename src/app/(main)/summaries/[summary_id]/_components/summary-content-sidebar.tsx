@@ -33,7 +33,7 @@ function generateQuizMetadata(course: Course) {
 export function SummaryContentSidebar({ course }: { course: Course }) {
   const { summary_id: summaryId } = useParams();
   const router = useRouter();
-  const [redirecting, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [pending, setPending] = useState(false);
   const [quizState, setQuizState] = useState<"search" | "create" | null>(null);
 
@@ -44,18 +44,18 @@ export function SummaryContentSidebar({ course }: { course: Course }) {
     setPending(true);
     if (!summaryId || !course.summary) return;
 
-    if (!userContext?.id) {
+    if (!userContext?.user?.id) {
       toast.error("Oops, who are you....");
       setPending(false);
       return;
     }
-    const language = assistantContext?.language || "Indonesian";
+    const language = assistantContext?.persona?.language || "Indonesian";
 
     setQuizState("search");
     const metadata = generateQuizMetadata(course);
     const result = await proceedToQuizAction(
       summaryId.toString(),
-      userContext.id,
+      userContext?.user.id,
       metadata,
       language,
       "search"
@@ -67,6 +67,7 @@ export function SummaryContentSidebar({ course }: { course: Course }) {
       );
       setPending(false);
     } else if (result?.quiz) {
+      toast.info("Redirecting...");
       startTransition(() => {
         router.push(`/quiz/${result.quiz}`);
       });
@@ -76,7 +77,7 @@ export function SummaryContentSidebar({ course }: { course: Course }) {
     setQuizState("create");
     const newQuiz = await proceedToQuizAction(
       summaryId.toString(),
-      userContext.id,
+      userContext?.user?.id,
       metadata,
       language,
       "create"
@@ -89,6 +90,7 @@ export function SummaryContentSidebar({ course }: { course: Course }) {
       );
       setPending(false);
     } else if (newQuiz?.quiz) {
+      toast.info("Redrecting...");
       startTransition(() => {
         router.push(`/quiz/${newQuiz.quiz}`);
       });
@@ -119,11 +121,18 @@ export function SummaryContentSidebar({ course }: { course: Course }) {
           </AlertDialogDescription>
         </AlertDialogContent>
       </AlertDialog>
-      <ChatSection mode="course" type="summary" />
-      <div className="flex w-full p-2">
-        <Button onClick={() => handleSubmit()} type="button" className="w-full">
-          Quiz
-        </Button>
+      <div className="flex flex-col h-full w-full justify-between">
+        <ChatSection mode="course" type="summary" />
+        <div className="flex w-full p-2">
+          <Button
+            onClick={() => handleSubmit()}
+            type="button"
+            variant={"destructive"}
+            className="w-full"
+          >
+            Quiz
+          </Button>
+        </div>
       </div>
     </>
   );

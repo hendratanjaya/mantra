@@ -10,13 +10,11 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { QuizQuestionContext } from "../../../_providers/quiz-question-provider";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,

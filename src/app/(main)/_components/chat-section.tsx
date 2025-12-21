@@ -28,9 +28,10 @@ import { ChatInput } from "./chat-input";
 import { ChatHistoryContext } from "../_providers/chat-history-provider";
 import { QuizQuestionContext } from "../quiz/_providers/quiz-question-provider";
 import { ActiveQuestionContext } from "../quiz/_providers/active-quiz-provider";
-import { UserProviderContext } from "../_providers/user-provider";
 import { sendMessageToAI } from "../action";
-import { SummaryContentContext } from "../summarize/_providers/summary-content-provider";
+import { SummaryContentContext } from "../summaries/_providers/summary-content-provider";
+import { avatarImageList } from "../_constants";
+import { useChatStore } from "../_stores/use-chat-store";
 
 // THE MAIN COMPONENT
 export function ChatSection({
@@ -40,34 +41,34 @@ export function ChatSection({
   mode: "regular" | "course" | "quiz";
   type?: "summary";
 }) {
+  const [avatarImage, setAvatarImage] = useState<string | undefined>(undefined);
+
   const { course_id, content_id, quiz_id } = useParams();
   const courseId = course_id ? String(course_id) : undefined;
   const contentId = content_id ? String(content_id) : undefined;
-  const quizId = content_id ? String(quiz_id) : undefined;
+  const quizId = quiz_id ? String(quiz_id) : undefined;
 
   //global context used
   const chatHistoryContext = useContext(ChatHistoryContext);
-  const assistanContext = useContext(AssistantPersonaContext);
-  const courseContentContext = useContext(CourseContentContext);
+  const { persona: assistanContext } = useContext(AssistantPersonaContext)!;
+  const courseContentContext = useContext(CourseContentContext)!;
   const quizQuestionContext = useContext(QuizQuestionContext);
   const courseSummary = useContext(SummaryContentContext);
-  const userContext = useContext(UserProviderContext);
 
-  const currentCourseContent = courseContentContext.find(
+  const contentList = courseContentContext?.contentList || [];
+
+  const currentCourseContent = contentList.find(
     (content) => content.id === contentId
   );
   const activeQuestionContext = useContext(ActiveQuestionContext);
 
+  const { generating, setGenerating } = useChatStore();
+
   const [chatHistory, setChatHistory] =
     useState<Pick<Chat, "message" | "sender">[]>(chatHistoryContext);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const [useAnimation, setUseAnimation] = useState(false);
 
-  // const metadata =
-  //   mode === "course" && !type
-  //     ? currentCourseContent?.metadata || ""
-  //     : mode === "quiz"
-  //     ? quizQuestionContext?.metadata || ""
-  //     : "";
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   let metadata = "";
   if (mode === "course" && type === "summary")
@@ -87,8 +88,8 @@ export function ChatSection({
       const context = createContext(
         mode,
         metadata,
-        lastFiveChat
-        // currentQuizContent?.question
+        lastFiveChat,
+        currentQuizContent?.question
       );
       return sendMessageToAI(
         prevSate,
@@ -114,8 +115,13 @@ export function ChatSection({
   );
 
   useEffect(() => {
+    setGenerating(pending);
+  }, [pending]);
+
+  useEffect(() => {
     if (state && !!state.message) {
       if (!state.error) {
+        setUseAnimation(true);
         pushNewMessage(state.message, "bot");
         return;
       }
@@ -128,39 +134,64 @@ export function ChatSection({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory]);
 
+  useEffect(() => {
+    const idx = Math.floor(Math.random() * avatarImageList.length);
+    setAvatarImage(avatarImageList[idx]);
+    setChatHistory(chatHistoryContext);
+  }, []);
+
   return (
     <Card className="h-full md:rounded-none border-none gap-0 py-0 pt-3 overflow-hidden">
       <CardHeader>
         <div className="flex w-full h-full items-center gap-5">
           <div>
             <Avatar>
-              <AvatarImage src={"https://github.com/shadcn.png"} />
+              <AvatarImage
+                src={avatarImage || undefined}
+                alt={"https://github.com/shadcn.png"}
+              />
             </Avatar>
           </div>
-          AssistantName
+          {assistanContext?.name}
         </div>
       </CardHeader>
-      <CardContent className="w-full h-full bg-destructive p-3 space-y-3.5 overflow-y-auto custom-scrollbar">
-        {chatHistory.map((chat, idx) => (
-          <ChatBubble
-            key={chat.sender + idx}
-            chat={chat}
-            useAnimation={
-              !!state?.isNewMessage &&
-              idx === chatHistory.length - 1 &&
-              chat.sender === "bot"
-            }
-          />
-        ))}
-        {pending && (
-          <ChatBubble chat={{ message: "", sender: "bot" }} pending={pending} />
+      <CardContent className="w-full h-full bg-primary p-3 overflow-y-auto custom-scrollbar space-y-3.5">
+        {chatHistory.length === 0 && !generating ? (
+          <div className="h-full flex flex-col items-center justify-center text-center gap-3 opacity-70">
+            <div className="text-sm text-muted-foreground">
+              Ask {assistanContext?.name}.
+            </div>
+          </div>
+        ) : (
+          <>
+            {chatHistory.map((chat, idx) => (
+              <ChatBubble
+                key={chat.sender + idx}
+                chat={chat}
+                useAnimation={
+                  idx === chatHistory.length - 1 &&
+                  chat.sender === "bot" &&
+                  useAnimation
+                }
+                setUseAnimation={setUseAnimation}
+              />
+            ))}
+
+            {generating && (
+              <ChatBubble
+                chat={{ message: "", sender: "bot" }}
+                pending={generating}
+              />
+            )}
+          </>
         )}
         <div ref={bottomRef} />
       </CardContent>
+
       <CardFooter className="p-2 w-full">
         <ChatInput
           formAction={formAction}
-          pending={pending}
+          pending={generating}
           pushNewMessage={pushNewMessage}
           courseId={mode === "course" ? courseId : undefined}
           quizId={mode === "quiz" ? quizId : undefined}
@@ -188,7 +219,6 @@ function createContext(
       ? [
           `Lesson ${parsed.order}: ${parsed.title}`,
           `Difficulty: ${parsed.difficulty}`,
-          `Duration: ~${parsed.estimated_duration || "not specified"} hours`,
           `\nKey Concepts:`,
           ...parsed.key_concepts.map((concept) => `  -${concept}`),
           `\nLearning Objective: ${parsed.learning_objective}`,

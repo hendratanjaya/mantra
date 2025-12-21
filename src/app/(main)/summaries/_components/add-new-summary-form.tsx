@@ -23,14 +23,18 @@ import { AssistantPersonaContext } from "../../_providers/assistant-provider";
 import { AssistantContext } from "@/lib/openai/type";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { UserProviderContext } from "../../_providers/user-provider";
+import { LoaderCircle } from "lucide-react";
 
-export function AddNewSummaryForm() {
+export function AddNewSummaryForm({
+  isExceedLimit,
+}: {
+  isExceedLimit: boolean;
+}) {
   const [pending, startTransition] = useTransition();
   const [openDialog, setOpenDialog] = useState(false);
-  const assistantContext = useContext(
-    AssistantPersonaContext
-  ) as AssistantContext;
-
+  const assistantContext = useContext(AssistantPersonaContext)!;
+  const { user } = useContext(UserProviderContext)!;
   const router = useRouter();
 
   const form = useForm<SummaryFormData>({
@@ -44,13 +48,16 @@ export function AddNewSummaryForm() {
 
   const onSubmit = (data: SummaryFormData) => {
     console.log("masukk");
-
+    if (!user) {
+      toast.error("Oops, who are you?");
+      return;
+    }
     startTransition(async () => {
+      toast.info("This might take a while");
       const state = await genearateNewSummary(
         data,
-        assistantContext,
-        "cmhe1ovpr0000sbmopoqu9i3t" // hard coded user id
-        //userContext!.id
+        assistantContext?.persona as AssistantContext,
+        user.id
       );
       if (state.error) {
         const message = state.message ?? "Oopss, something went wrong";
@@ -63,8 +70,7 @@ export function AddNewSummaryForm() {
       // To Do render generated course into the dedicated page
 
       const courseId = state.field;
-      console.log(courseId);
-      router.push(`sumamrize/${courseId}`);
+      router.push(`summarize/${courseId}`);
     });
   };
 
@@ -72,6 +78,11 @@ export function AddNewSummaryForm() {
     <Dialog
       onOpenChange={(open) => {
         if (!open) form.reset();
+        else if (open && isExceedLimit) {
+          setOpenDialog(false);
+          toast.info("You've reached the 3-summaries limit.");
+          return;
+        }
         setOpenDialog(open);
       }}
       open={openDialog || pending}
@@ -82,7 +93,7 @@ export function AddNewSummaryForm() {
       <DialogContent className="max-w-[425px] md:max-w-[50vw] max-h-[70vh] overflow-y-auto custom-scrollbar">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>Add New Course</DialogTitle>
+            <DialogTitle>Add New Course Summary</DialogTitle>
             <DialogDescription>
               Add relevant context of material you want to learn. Click save
               when you&apos;re done.
@@ -96,6 +107,7 @@ export function AddNewSummaryForm() {
                     key={field.name}
                     {...field}
                     form={form}
+                    disabled={pending}
                   />
                 );
               })}
@@ -103,12 +115,15 @@ export function AddNewSummaryForm() {
           </FieldSet>
           <DialogFooter>
             <DialogClose asChild>
-              <Button disabled={pending} variant="outline">
-                Cancel
-              </Button>
+              {!pending && (
+                <Button disabled={pending} variant="outline">
+                  Cancel
+                </Button>
+              )}
             </DialogClose>
             <Button disabled={pending} type="submit">
-              Save changes
+              {pending ? "Generating..." : "Save changes"}
+              {pending && <LoaderCircle className="animate-spin" />}
             </Button>
           </DialogFooter>
         </form>

@@ -1,67 +1,94 @@
 "use server";
 
+import { AssistantContext, CourseMetadata } from "@/lib/openai/type";
+import { CourseFormStateResponse } from "./type";
 import {
-  AssistantContext,
-  ChatContext,
-  CourseMetadata,
-} from "@/lib/openai/type";
-import { CourseFormStateResponse, MessageStateResponse } from "./type";
-import {
-  generateAIRespondForCourseChat,
-  generateAIRespondForRegularChat,
+  generateCodeFillBlankQuiz,
+  generateCourseIntroduction,
   generateCourseMetadata,
   generatePathContent,
-  summmarizeFile,
 } from "@/lib/openai/generate-ai-respond";
 import { prisma } from "@/utils/prisma";
 import { cache } from "react";
 import { logger } from "@/utils/logger";
 import { CourseFormData } from "../_schemas/course";
 import { UserException } from "@/lib/utils";
+import { title } from "process";
+
+//TO DO: create an adaptive course mechanic
 
 export async function generateNewCourse(
   formData: CourseFormData,
   assistantContext: AssistantContext,
   userId: string
 ): Promise<CourseFormStateResponse> {
-  const { title, topic, content_type, content_file } = formData;
-
-  console.log("halo abang");
-
-  // const ass: AssistantContext = {
-  //   name: "Lilith",
-  //   style: "conversational",
-  //   description:
-  //     "Your name is Lilith, You answer my question while questioning how i can be so stupid, but you explain my question with detailed information anyway. You have a sharp glare almost disgust when i asked you a stupid question, but again you explain it to me anyway.",
-  //   tone: "friendly",
-  //   depth: "intermediate",
-  //   language: "English",
-  // };
-  // let summary = "";
   try {
-    // if (content_type === "content_file") {
-    //   if (!content_file)
-    //     return {
-    //       error: true,
-    //       message: "This field is required",
-    //       field: "content_file",
-    //     };
-    //   console.log("summarizing..");
-    //   summary = await summmarizeFile(content_file, assistantContext);
-    //   if (!summary) throw new UserException("Failed to generate summary", 500);
-    // }
+    const { content_option, programming_language, difficulty_preference } =
+      formData;
 
-    // // TO DO: adjust this function to only do proper summary
-    // const newCourse = await prisma.course.create({
-    //   data: {
-    //     title,
-    //     summary,
-    //     type: "summary",
-    //     user_id: userId
-    //   }
-    // })
+    const metadata = await generateCourseMetadata(formData);
+    const { course_metadata } = JSON.parse(metadata) as CourseMetadata;
 
-    return { error: false, message: null, field: "" };
+    const [introduction, pathContent, pathQuiz] = await Promise.all([
+      generateCourseIntroduction(formData, assistantContext),
+      generatePathContent(
+        {
+          topic: content_option,
+          programming_language,
+          userPreferences: assistantContext,
+        },
+        course_metadata[0]
+      ),
+      generateCodeFillBlankQuiz(
+        content_option,
+        programming_language,
+        course_metadata[0].key_concepts,
+        difficulty_preference
+      ),
+    ]);
+
+    console.log("is writing to DB");
+
+    const newCourseContent = course_metadata.map((data, idx) => {
+      const newCourseContent = {
+        title: data.title,
+        order: data.order,
+        content: "",
+        quiz: "",
+        metadata: JSON.stringify(course_metadata[idx]),
+      };
+      if (idx === 0) {
+        newCourseContent.content = pathContent;
+        newCourseContent.quiz = pathQuiz;
+      }
+
+      return newCourseContent;
+    });
+
+    const newCourse = await prisma.course.create({
+      data: {
+        title: content_option,
+        topic: programming_language,
+        type: "course",
+        summary: "",
+        user_id: userId,
+        content: {
+          createMany: {
+            data: [
+              {
+                title: "Introduction",
+                order: 0,
+                content: introduction,
+                metadata: JSON.stringify(course_metadata[0]),
+              },
+              ...newCourseContent,
+            ],
+          },
+        },
+      },
+    });
+
+    return { error: false, message: null, field: newCourse.id };
   } catch (error) {
     logger.error("Error while generating new course");
     logger.error(error);
@@ -71,14 +98,4 @@ export async function generateNewCourse(
 
     return { error: true, message, field: null };
   }
-
-  // const assistantContext: AssistantContext = {
-  //   name: "Lilith",
-  //   style: "structured",
-  //   description:
-  //     "Your name is Lilith, you are older lady in her 30s, prentending to hate me, but deep inside you really cared and loved me. Being tsundere is your personality. You answer my question while questioning how i can be so stupid, but you explain my question with detailed information anyway. Sometimes you tease me, but you get flusted by your own teasing, leaving me clueless, how you can be so cute. You have a sharp glare almost disgust when i asked you a stupid question, but again you explain it to me anyway.",
-  //   tone: "casual",
-  //   depth: "intermediate",
-  //   language: "English",
-  // };
 }

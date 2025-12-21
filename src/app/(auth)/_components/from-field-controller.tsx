@@ -25,6 +25,7 @@ export function FieldController<T extends FieldValues>({
               id={`register_${name}`}
               aria-invalid={fieldState.invalid}
               autoComplete="off"
+              placeholder={placeholder}
             />
           ) : (
             <Input

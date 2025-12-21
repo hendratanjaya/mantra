@@ -68,9 +68,9 @@ model Course {
 model CourseContent {
   id                    String    @id @default(cuid())
   title                 String
-  difficulty_level      String
   order                 Int
   content               String
+  quiz                  String? // drag and drop quiz
   metadata              String
   created_at            DateTime  @default(now())
   update_at             DateTime  @updatedAt

@@ -18,13 +18,23 @@ import {
 import { RiAccountPinBoxLine, RiLogoutBoxRLine } from "react-icons/ri";
 import { HiDotsVertical } from "react-icons/hi";
 import { LogoutButton } from "./logout-button";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { UserProviderContext } from "../_providers/user-provider";
+import { avatarImageList } from "../_constants";
+import Link from "next/link";
 
 export function FooterSidebar({}) {
   const { isMobile } = useSidebar();
-  const userContext = useContext(UserProviderContext);
+  const { user: userContext } = useContext(UserProviderContext)!;
   const avatartFallback = userContext?.name.slice(0, 2).toUpperCase() || "404";
+
+  const [avatarImage, setAvatarImage] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const idx = Math.floor(Math.random() * avatarImageList.length);
+    setAvatarImage(avatarImageList[idx]);
+  }, []);
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -36,7 +46,7 @@ export function FooterSidebar({}) {
             >
               <Avatar className="h-8 w-8 rounded-lg grayscale">
                 <AvatarImage
-                  src={userContext?.avatar || undefined}
+                  src={userContext?.avatar || avatarImage || undefined}
                   alt={"https://github.com/shadcn.png"}
                 />
                 <AvatarFallback className="rounded-lg">
@@ -61,7 +71,7 @@ export function FooterSidebar({}) {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
-                    src={userContext?.avatar || undefined}
+                    src={userContext?.avatar || avatarImage || undefined}
                     alt={"https://github.com/shadcn.png"}
                   />
                   <AvatarFallback className="rounded-lg">
@@ -82,7 +92,7 @@ export function FooterSidebar({}) {
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <RiAccountPinBoxLine />
-                Account Settings
+                <Link href={"/setting"}>Account Settings</Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

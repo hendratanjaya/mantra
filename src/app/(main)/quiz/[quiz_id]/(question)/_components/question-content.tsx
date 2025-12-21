@@ -146,12 +146,12 @@ export function QuestionContent() {
                     </CardHeader>
 
                     <CardContent className="flex flex-col items-center p-6 gap-3">
-                      {answerList.map((answer) => {
+                      {answerList.map((answer, idx) => {
                         const { key, label } = answer;
                         const isSelected = selected[quizQ.id] === key;
                         return (
                           <button
-                            key={key}
+                            key={key + idx}
                             onClick={() => {
                               setSelected((prev) => ({
                                 //marker for button

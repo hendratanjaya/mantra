@@ -1,5 +1,5 @@
 import { Controller, UseFormReturn } from "react-hook-form";
-import { CourseFieldControllerType } from "../type";
+import { CourseFieldControllerType, CourseSelectField } from "../type";
 import { CourseFormData } from "../../_schemas/course";
 import {
   Field,
@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ChangeEvent, useState } from "react";
 import { SelectForm } from "./select-form";
 import { cn } from "@/lib/utils";
+import { fielWithOptions } from "../_constants";
 
 export function CourseFormController({
   name,
@@ -20,8 +21,13 @@ export function CourseFormController({
   description,
   maxChar,
   isTextArea,
+  isSelect,
   form,
-}: CourseFieldControllerType & { form: UseFormReturn<CourseFormData> }) {
+  disabled,
+}: CourseFieldControllerType & {
+  form: UseFormReturn<CourseFormData>;
+  disabled: boolean;
+}) {
   const [charCounter, setCharCounter] = useState(0);
   const handleCharCount = <T extends HTMLInputElement | HTMLTextAreaElement>(
     e: ChangeEvent<T>
@@ -30,22 +36,13 @@ export function CourseFormController({
     const charCount = value.length;
     setCharCounter(charCount);
   };
-  const contentType = form.watch("content_type");
 
   return (
     <Controller
       name={name}
       control={form.control}
       render={({ field, fieldState }) => (
-        <Field
-          className={cn(
-            `col-span-2 gap-y-2`,
-            name !== "content_type" &&
-              name.startsWith("content_") &&
-              contentType !== name &&
-              "hidden"
-          )}
-        >
+        <Field className={cn(`col-span-2 gap-y-2`)}>
           <FieldLabel>
             {label}
             <span className=" flex flex-1 justify-end pr-3">
@@ -60,6 +57,7 @@ export function CourseFormController({
             <Textarea
               {...field}
               id={`course_${name}`}
+              disabled={disabled}
               aria-invalid={fieldState.invalid}
               placeholder={placeholder}
               onChange={(e) => {
@@ -70,23 +68,17 @@ export function CourseFormController({
               autoComplete="off"
               className="h-[100px]"
             />
-          ) : ["difficulty_preference", "content_type"].includes(name) ? (
-            <SelectForm onValueChange={field.onChange} name={name} />
-          ) : name === "content_file" ? (
-            <Input
-              type="file"
-              content="pdf,txt"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                field.onChange(file ?? null);
-              }}
-              onBlur={field.onBlur}
-              name={field.name}
-              ref={field.ref}
+          ) : isSelect ? (
+            <SelectForm
+              disabled={disabled}
+              onValueChange={field.onChange}
+              options={fielWithOptions[name as CourseSelectField]}
+              placeholder={placeholder}
             />
           ) : (
             <Input
               {...field}
+              disabled={disabled}
               id={`course_${name}`}
               aria-invalid={fieldState.invalid}
               placeholder={placeholder}

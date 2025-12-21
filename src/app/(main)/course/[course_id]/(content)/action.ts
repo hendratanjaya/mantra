@@ -1,13 +1,113 @@
 "use server";
 
-import { generateQuizQuestion } from "@/lib/openai/generate-ai-respond";
-import { QuizContext, QuizQuestions } from "@/lib/openai/type";
+import {
+  generateCodeFillBlankQuiz,
+  generatePathContent,
+  generateQuizQuestion,
+  generateRemedialIntervention,
+} from "@/lib/openai/generate-ai-respond";
+import {
+  AssistantContext,
+  Metadata,
+  QuizContext,
+  QuizQuestions,
+} from "@/lib/openai/type";
 import { logger } from "@/utils/logger";
 import { prisma } from "@/utils/prisma";
-import { GenerateQuizResponse } from "../../type";
+import { GenerateQuizResponse, StateResponse } from "../../type";
+import { QuizResult } from "../../_stores/use-learning-store";
+import { UserException } from "@/lib/utils";
+import { error } from "console";
 
+export async function getRemedialIntervention(
+  courseMetadata: Metadata,
+  performance: QuizResult,
+  assistantContext: AssistantContext
+): Promise<StateResponse> {
+  try {
+    const remedialInterventionContent = await generateRemedialIntervention(
+      courseMetadata,
+      performance,
+      assistantContext
+    );
+
+    if (!remedialInterventionContent)
+      throw new Error("Remedial intervention is empty");
+
+    return { error: false, message: remedialInterventionContent };
+  } catch (error) {
+    let errorMessage = "Internal server error";
+    if (error instanceof UserException) errorMessage = error.message;
+
+    logger.error("Failed to generate remedial intervention");
+    logger.error(error);
+    return { error: true, message: errorMessage };
+  }
+}
+
+export async function generateNextPath(
+  assistantContext: AssistantContext,
+  metadata: Metadata,
+  courseId: string,
+  courseContentId: string,
+  difficulty: "intermediate" | "beginner" | "advanced"
+) {
+  console.log("Server function started"); // ← Add this
+  try {
+    const course = await prisma.course.findFirst({
+      where: { id: courseId },
+      select: { topic: true, title: true },
+    });
+
+    if (!course) throw new UserException("Course not found", 400);
+    const context = {
+      topic: course.title,
+      programming_language: course.topic,
+      userPreferences: assistantContext,
+    };
+
+    console.log("is generating new path content");
+
+    console.log({ course });
+    const [newPathContent, newPathQuiz] = await Promise.all([
+      generatePathContent(context, metadata),
+      generateCodeFillBlankQuiz(
+        course.title,
+        course.topic,
+        metadata.key_concepts,
+        difficulty
+      ),
+    ]);
+
+    console.log("is updating to db");
+    await prisma.courseContent.update({
+      where: { id: courseContentId },
+      data: {
+        content: newPathContent,
+        quiz: newPathQuiz,
+      },
+    });
+
+    if (!newPathContent || !newPathQuiz)
+      throw new Error("Failed to generate new path content");
+
+    return {
+      error: false,
+      message: "",
+      newPathContent,
+      newPathQuiz,
+    };
+  } catch (error) {
+    let errorMessage = "Internal server error";
+    if (error instanceof UserException) errorMessage = error.message;
+
+    logger.error("Failed to generate remedial intervention");
+    logger.error(error);
+    return { error: true, message: errorMessage };
+  }
+}
 export async function proceedToQuizAction(
-  contentId: string,
+  courseId: string,
   userId: string,
   contentMetadata: string,
   language: string,
@@ -16,13 +116,13 @@ export async function proceedToQuizAction(
   console.log(`is ${mode}-ing quiz...`);
 
   if (mode === "search") {
-    const quizData = await getQuizByContentId(contentId);
+    const quizData = await getQuizByContentId(courseId);
     return quizData;
   }
 
   if (mode === "create") {
     const quizData = await generateNewQuiz(
-      contentId,
+      courseId,
       userId,
       contentMetadata,
       language
@@ -35,13 +135,13 @@ export async function proceedToQuizAction(
 }
 
 async function getQuizByContentId(
-  contentId: string
+  courseId: string
 ): Promise<GenerateQuizResponse> {
   try {
     // return { quiz: null, error: true, errorState: "fillin your butt" };
 
     const quiz = await prisma.quiz.findFirst({
-      where: { course_content_id: contentId },
+      where: { course_id: courseId },
       select: { id: true },
     });
 
@@ -55,7 +155,7 @@ async function getQuizByContentId(
 }
 
 async function generateNewQuiz(
-  contentId: string,
+  courseId: string,
   userId: string,
   metadata: string,
   language: string
@@ -63,15 +163,12 @@ async function generateNewQuiz(
   try {
     console.log("is generating...");
     const context: QuizContext = { content_metadata: metadata, language };
-    const quizQuestions = await generateQuizQuestion(context);
-
-    console.dir(quizQuestions, { depth: null });
+    const quizQuestions = await generateQuizQuestion(context, 10);
 
     const parsedQuizQuestions = JSON.parse(quizQuestions) as QuizQuestions;
 
     const { quiz_questions: questionLists } = parsedQuizQuestions;
     if (!questionLists || questionLists.length === 0) {
-      console.log(quizQuestions);
       throw new Error(
         "Error parsing questions, unexpected format, quiz_questions not exist or empty"
       );
@@ -90,7 +187,7 @@ async function generateNewQuiz(
       data: {
         metadata,
         user_id: userId,
-        course_content_id: contentId,
+        course_id: courseId,
         quiz_question: {
           create: newQuestions,
         },
@@ -105,5 +202,3 @@ async function generateNewQuiz(
     return { quiz: null, error: true, message: "creating quiz" };
   }
 }
-
-

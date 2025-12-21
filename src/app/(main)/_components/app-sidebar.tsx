@@ -1,3 +1,4 @@
+"use client";
 import {
   Sidebar,
   SidebarContent,
@@ -23,7 +24,7 @@ export function AppSidebar() {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="#">
-                <GiMagicHat className="!size-5" />
+                <GiMagicHat className="size-5" />
                 <span className="text-base font-semibold">Mantra.</span>
               </a>
             </SidebarMenuButton>

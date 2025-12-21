@@ -11,11 +11,6 @@ export function SummaryContent({ summaryContent }: { summaryContent: string }) {
         <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>
           {summaryContent || "**Oops, something went wrong**"}
         </Markdown>
-        {/* {parsedMetadata?.quiz && (
-          <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>
-            {parsedMetadata.quiz}
-          </Markdown>
-        )} */}
       </div>
     </div>
   );

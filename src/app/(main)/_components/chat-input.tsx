@@ -3,6 +3,7 @@ import { UserProviderContext } from "../_providers/user-provider";
 import { Button } from "@/components/ui/button";
 import { MdSend } from "react-icons/md";
 import { useQuizFeeadbackStore } from "../_stores/use-quiz-feedback-store";
+import { AssistantPersonaContext } from "../_providers/assistant-provider";
 
 export function ChatInput({
   formAction,
@@ -23,6 +24,7 @@ export function ChatInput({
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const userContext = useContext(UserProviderContext);
+  const assistanContext = useContext(AssistantPersonaContext);
   const { feedbackRequest, setQuizFeedbackRequest } = useQuizFeeadbackStore();
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
@@ -61,7 +63,7 @@ export function ChatInput({
     <div className="flex items-center w-full">
       <form ref={formRef} className="h-full w-full" action={formAction}>
         <textarea name="message" ref={textAreaRef} className="hidden" />
-        <input name="user_id" type="hidden" value={userContext?.id} />
+        <input name="user_id" type="hidden" value={userContext?.user?.id} />
         <input name="course_id" type="hidden" value={courseId} />
         <input name="quiz_id" type="hidden" value={quizId} />
         <div className="flex justify-between gap-1">
@@ -69,7 +71,9 @@ export function ChatInput({
             ref={divRef}
             contentEditable="plaintext-only"
             onInput={handleInput}
-            data-placeholder="Ask me anything"
+            data-placeholder={`Ask ${
+              assistanContext?.persona?.name || "me"
+            } anything`}
             className="py-2 px-4 bg-secondary rounded-l-2xl outline-0 text-sm flex-1 md:max-h-[200px] max-h-[100px] overflow-y-auto custom-scrollbar"
           />
           <div className="flex flex-col justify-end">

@@ -22,13 +22,13 @@ import { error } from "console";
 export async function getRemedialIntervention(
   courseMetadata: Metadata,
   performance: QuizResult,
-  assistantContext: AssistantContext
+  assistantContext: AssistantContext,
 ): Promise<StateResponse> {
   try {
     const remedialInterventionContent = await generateRemedialIntervention(
       courseMetadata,
       performance,
-      assistantContext
+      assistantContext,
     );
 
     if (!remedialInterventionContent)
@@ -50,7 +50,7 @@ export async function generateNextPath(
   metadata: Metadata,
   courseId: string,
   courseContentId: string,
-  difficulty: "intermediate" | "beginner" | "advanced"
+  difficulty: "intermediate" | "beginner" | "advanced",
 ) {
   console.log("Server function started"); // ← Add this
   try {
@@ -75,7 +75,7 @@ export async function generateNextPath(
         course.title,
         course.topic,
         metadata.key_concepts,
-        difficulty
+        difficulty,
       ),
     ]);
 
@@ -111,7 +111,7 @@ export async function proceedToQuizAction(
   userId: string,
   contentMetadata: string,
   language: string,
-  mode: "search" | "create"
+  mode: "search" | "create",
 ): Promise<GenerateQuizResponse> {
   console.log(`is ${mode}-ing quiz...`);
 
@@ -125,7 +125,7 @@ export async function proceedToQuizAction(
       courseId,
       userId,
       contentMetadata,
-      language
+      language,
     );
 
     return quizData;
@@ -135,7 +135,7 @@ export async function proceedToQuizAction(
 }
 
 async function getQuizByContentId(
-  courseId: string
+  courseId: string,
 ): Promise<GenerateQuizResponse> {
   try {
     // return { quiz: null, error: true, errorState: "fillin your butt" };
@@ -158,7 +158,7 @@ async function generateNewQuiz(
   courseId: string,
   userId: string,
   metadata: string,
-  language: string
+  language: string,
 ): Promise<GenerateQuizResponse> {
   try {
     console.log("is generating...");
@@ -170,7 +170,7 @@ async function generateNewQuiz(
     const { quiz_questions: questionLists } = parsedQuizQuestions;
     if (!questionLists || questionLists.length === 0) {
       throw new Error(
-        "Error parsing questions, unexpected format, quiz_questions not exist or empty"
+        "Error parsing questions, unexpected format, quiz_questions not exist or empty",
       );
     }
 

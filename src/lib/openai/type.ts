@@ -54,6 +54,7 @@ export type CourseMetadata = {
 export type Metadata = {
   order: number;
   title: string;
+  estimated_duration?: number;
   description: string;
   key_concepts: string[];
   learning_objective: string;

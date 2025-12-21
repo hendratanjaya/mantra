@@ -30,7 +30,7 @@ async function getRespond(
   messages: ChatCompletionMessageParam[],
   responseFormat?: ResponseFormatJSONSchema,
   mode: "chat" | "content" = "chat",
-  usePlugin: boolean = false
+  usePlugin: boolean = false,
 ): Promise<string> {
   try {
     if (mode === "chat") {
@@ -84,7 +84,7 @@ function generateChatHistory(chatHistory: ChatHistory[]) {
 export async function generateAIRespondForRegularChat(
   question: string,
   assistantContext: AssistantContext,
-  context: ChatContext
+  context: ChatContext,
 ) {
   const { OPENROUTER_CHAT_PRESET: model } = process.env;
   const {
@@ -130,7 +130,7 @@ export async function generateAIRespondForRegularChat(
 export async function generateAIRespondForCourseChat(
   question: string,
   assistantContext: AssistantContext,
-  context: ChatContext
+  context: ChatContext,
 ) {
   const { OPENROUTER_CHAT_PRESET: model } = process.env;
   const {
@@ -187,7 +187,7 @@ export async function generateAIRespondForCourseChat(
 export async function generateAIRespondForQuizChat(
   question: string,
   assistantContext: AssistantContext,
-  context: ChatContext
+  context: ChatContext,
 ) {
   const { OPENROUTER_CHAT_PRESET: model } = process.env;
   const {
@@ -238,9 +238,9 @@ export async function generatePathContent(
     programming_language: string;
     userPreferences: AssistantContext;
   },
-  pathMetadata: Metadata
+  pathMetadata: Metadata,
 ) {
-  const model = "meta-llama/llama-3.3-70b-instruct:free";
+  const model = "meta-llama/llama-3.3-70b-instruct";
   const messages: ChatCompletionMessageParam[] = [
     {
       role: "system",
@@ -288,9 +288,9 @@ export async function generateCodeFillBlankQuiz(
   topic: string,
   programmingLanguage: string,
   keyConcepts: string[],
-  difficulty: "beginner" | "intermediate" | "advanced"
+  difficulty: "beginner" | "intermediate" | "advanced",
 ) {
-  const model = "qwen/qwen3-coder";
+  const model = "openai/gpt-5.2-codex";
   const topicExamples = getTopicExamples(topic, programmingLanguage);
   const syntaxPatterns = getSyntaxPatterns(programmingLanguage);
   const diff = difficulty === "advanced" ? "intermediate" : difficulty;
@@ -619,14 +619,14 @@ Requirement: Ensure total parity between placeholders in code, instruction, and 
     model,
     messages,
     responseFormat,
-    "content"
+    "content",
   );
 
   return aiRespond;
 }
 export async function generateCourseIntroduction(
   context: CourseContext,
-  assistantContext: AssistantContext
+  assistantContext: AssistantContext,
 ) {
   const {
     content_option,
@@ -637,7 +637,7 @@ export async function generateCourseIntroduction(
 
   const { name, tone, language, description } = assistantContext;
 
-  const model = "meta-llama/llama-3.3-70b-instruct:free";
+  const model = "meta-llama/llama-3.3-70b-instruct";
   const messages: ChatCompletionMessageParam[] = [
     {
       role: "system",
@@ -789,7 +789,7 @@ export async function generateCourseMetadata(context: CourseContext) {
     model,
     messages,
     responseFormat,
-    "content"
+    "content",
   );
   return aiRespond;
 }
@@ -797,7 +797,7 @@ export async function generateCourseMetadata(context: CourseContext) {
 export async function generateRemedialIntervention(
   courseMetadata: Metadata,
   performance: QuizResult,
-  assistantContext: AssistantContext
+  assistantContext: AssistantContext,
 ) {
   const model = "openai/gpt-4o-mini";
   const messages: ChatCompletionMessageParam[] = [
@@ -820,7 +820,7 @@ Student performance:
 - Hints used: ${performance.hintsUsed}
 
 Your task:
-- User seems troubled with the current materiak, explain the undelying concept to help user understand the current material even better
+- User seems troubled with the current material, explain the undelying concept to help user understand the current material even better
 - Give 1-2 concrete learning tips
 - Encourage the student without shaming
 
@@ -848,7 +848,7 @@ Short markdown explanation (max 250 words)
 
 export async function summmarizeFile(
   file: File,
-  assistantContext: AssistantContext
+  assistantContext: AssistantContext,
 ) {
   const { totalPages, base64Pdf } = await getPdfInfo(file);
   const { name, tone, language, description } = assistantContext;
@@ -858,10 +858,10 @@ export async function summmarizeFile(
   if (totalPages > 10)
     throw new UserException(
       "Oops, this file contains 10+ pages, please try again with smaller file",
-      400
+      400,
     );
 
-  const model = "meta-llama/llama-3.3-70b-instruct:free";
+  const model = "meta-llama/llama-3.3-70b-instruct";
   const message: ChatCompletionMessageParam[] = [
     {
       role: "system",
@@ -919,7 +919,7 @@ export async function summmarizeFile(
 
 export async function generateQuizQuestion(
   context: QuizContext,
-  total: number = 5
+  total: number = 5,
 ) {
   const { content_metadata, language } = context;
   const parsedMetadata = JSON.parse(content_metadata) as Metadata;
@@ -1050,7 +1050,7 @@ export async function generateQuizQuestion(
     model,
     messages,
     responseFormat,
-    "content"
+    "content",
   );
 
   return aiRespond;

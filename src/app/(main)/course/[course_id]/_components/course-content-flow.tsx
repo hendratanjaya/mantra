@@ -11,10 +11,12 @@ import {
 import { SimpleNode } from "./node";
 import "@xyflow/react/dist/style.css";
 // import { useIsMobile } from "@/hooks/use-mobile";
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { CourseContentContext } from "../_providers/course-content-provider";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { QuizIdContext } from "../_providers/quiz-providers";
+import { useBreadcrumbStore } from "@/app/(main)/_stores/use-breadcrumb-store";
+import { useCourseStore } from "../../_stores/use-course-store";
 
 export default function CourseContentFlow() {
   const { contentList } = useContext(CourseContentContext)!;
@@ -72,6 +74,18 @@ export default function CourseContentFlow() {
   const fitViewOptions: FitViewOptions = {
     padding: 0.4,
   };
+
+  const { reset, setItems } = useBreadcrumbStore();
+  const { course } = useCourseStore();
+  useEffect(() => {
+    if (course)
+      setItems([
+        { href: "/course", label: "Course" },
+        { href: `/course/${course.id}`, label: course.title },
+      ]);
+
+    return () => reset();
+  }, [course]);
 
   return (
     <div className="h-full w-full">

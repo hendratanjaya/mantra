@@ -7,6 +7,7 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { LoaderCircle } from "lucide-react";
 import Markdown from "react-markdown";
 
 export function RemedialInterveneDialog({
@@ -71,10 +72,11 @@ export function RemedialInterveneDialog({
             {isEvaluating
               ? "Evaluating…"
               : isGenerating
-              ? "Generating next lesson…"
-              : isRedirecting
-              ? "Redirecting…"
-              : "Continue"}
+                ? "Generating next lesson…"
+                : isRedirecting
+                  ? "Redirecting…"
+                  : "Continue"}
+            {isBusy && <LoaderCircle className="animate-spin" />}
           </Button>
         </DialogFooter>
       </DialogContent>

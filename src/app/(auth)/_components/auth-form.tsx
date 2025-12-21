@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import AuthStateManager from "./auth-state-manager";
 import Link from "next/link";
 import OauthButton from "./oauth-button";
+import { LoaderCircle } from "lucide-react";
 
 export default function AuthForm({
   title,
@@ -39,6 +40,7 @@ export default function AuthForm({
             disabled={pending}
           >
             {title}
+            {pending && <LoaderCircle className="animate-spin" />}
           </Button>
           <small>
             {formId === "login" ? (

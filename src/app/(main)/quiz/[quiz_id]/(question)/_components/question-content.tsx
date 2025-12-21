@@ -2,7 +2,7 @@
 
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { QuizQuestionContext } from "../../../_providers/quiz-question-provider";
-import { useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   Carousel,
   CarouselApi,
@@ -21,11 +21,14 @@ import { buttonClickResponses } from "../_constants";
 import Markdown from "react-markdown";
 import { CalculatingDialog } from "./calculating-dialog";
 import { ActiveQuestionContext } from "../../../_providers/active-quiz-provider";
-import { AnswerList, Question } from "@/lib/openai/type";
+import { AnswerList, Metadata, Question } from "@/lib/openai/type";
+import { useBreadcrumbStore } from "@/app/(main)/_stores/use-breadcrumb-store";
 
 export function QuestionContent() {
   const quizContext = useContext(QuizQuestionContext);
   const questionContext = useContext(ActiveQuestionContext);
+
+  const { quiz_id } = useParams();
 
   const router = useRouter();
 
@@ -123,6 +126,25 @@ export function QuestionContent() {
     });
   }, [api]);
 
+  const { setItems, reset: resetBreadCrumb } = useBreadcrumbStore();
+  useEffect(() => {
+    const metadata = quizContext?.metadata;
+    if (metadata) {
+      try {
+        const parsed = JSON.parse(metadata) as Metadata;
+        if (parsed?.title)
+          setItems([
+            { href: "/quiz", label: "Quiz" },
+            { href: `/quiz/${String(quiz_id)}`, label: parsed.title },
+          ]);
+      } catch (_) {
+        return;
+      }
+    }
+
+    return () => resetBreadCrumb();
+  }, []);
+
   return (
     <>
       <CalculatingDialog
@@ -162,7 +184,7 @@ export function QuestionContent() {
                               const randomFiller = //filler for empty space
                                 buttonClickResponses[
                                   Math.floor(
-                                    Math.random() * buttonClickResponses.length
+                                    Math.random() * buttonClickResponses.length,
                                   )
                                 ];
 

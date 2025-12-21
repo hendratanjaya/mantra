@@ -1,3 +1,4 @@
+import { useChatStore } from "@/app/(main)/_stores/use-chat-store";
 import { useQuizFeeadbackStore } from "@/app/(main)/_stores/use-quiz-feedback-store";
 import { useLearningStore } from "@/app/(main)/course/_stores/use-learning-store";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 
 export function checkAnswers(
   question: DragAndDropQuizItems,
-  answers: Record<string, string>
+  answers: Record<string, string>,
 ) {
   let correct = 0;
 
@@ -104,7 +105,7 @@ export function DragDropQuiz({
     const quizCode = `This the provided code: ${code}\n`;
     const optionsLabel = quiz.options.map((o) => o.label);
     const option = `and this the provided options ${optionsLabel.join(
-      ", "
+      ", ",
     )}\n\n`;
     const request = `Can you guide me for this question?`;
 
@@ -124,6 +125,8 @@ export function DragDropQuiz({
     }));
   }
 
+  const { generating } = useChatStore();
+
   return (
     <div
       style={{
@@ -141,6 +144,7 @@ export function DragDropQuiz({
             setQuizFeedbackRequest(createFeedbackRequest());
           }}
           variant={"destructive"}
+          disabled={generating}
         >
           Hint
         </Button>

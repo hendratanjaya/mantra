@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { useContext, useState, useTransition } from "react";
+import { useContext, useEffect, useState, useTransition } from "react";
 import Markdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
@@ -31,10 +31,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoaderCircle } from "lucide-react";
 import { QuizIdContext } from "../../../_providers/quiz-providers";
+import { useCourseStore } from "@/app/(main)/course/_stores/use-course-store";
+import { useBreadcrumbStore } from "@/app/(main)/_stores/use-breadcrumb-store";
 
-function generateFinalMetadata(contentList: CourseContentType[]) {
+function generateFinalMetadata(
+  courseTitle: string,
+  contentList: CourseContentType[],
+) {
   const finalMetadata = {
-    title: "Combined Module",
+    title: courseTitle || "Combined Module",
     difficulty: "intermediate" as const,
     estimated_duration: 0,
     key_concepts: [] as string[],
@@ -86,7 +91,7 @@ export function CourseContent({ id }: { id: string }) {
 
   const [showIntervention, setShowIntervention] = useState(false);
   const [interventionContent, setInterventionContent] = useState<string | null>(
-    null
+    null,
   );
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [performance, setPerformance] = useState<QuizResult | null>(null);
@@ -154,8 +159,7 @@ export function CourseContent({ id }: { id: string }) {
     // console.log({ performance });
     console.log({ accuracy });
     // 3. intervention rules
-    const intervene =
-      performance.accuracy < 0.7 || totalHints > quizzes.length * 2;
+    const intervene = performance.accuracy < 0.7 || totalHints >= 2;
 
     return { intervene, performance };
   }
@@ -183,7 +187,7 @@ export function CourseContent({ id }: { id: string }) {
       const intervention = await getRemedialIntervention(
         parsedMetadata,
         performance,
-        assistantContext!
+        assistantContext!,
       );
 
       if (intervention.error) {
@@ -217,14 +221,14 @@ export function CourseContent({ id }: { id: string }) {
       };
 
       const nextPathMetadata = JSON.parse(
-        contentList[index + 1].metadata
+        contentList[index + 1].metadata,
       ) as Metadata;
       const newPath = await generateNextPath(
         assistantContext!,
         nextPathMetadata,
         String(course_id),
         nextId,
-        difficulty()
+        difficulty(),
       );
       if (newPath.error) {
         toast.error(newPath.message);
@@ -239,8 +243,8 @@ export function CourseContent({ id }: { id: string }) {
                 content: newPath.newPathContent!,
                 quiz: newPath.newPathQuiz!,
               }
-            : list
-        )
+            : list,
+        ),
       );
       console.log("Redirecting to next path..");
       setIsRedirecting(true);
@@ -273,7 +277,7 @@ export function CourseContent({ id }: { id: string }) {
       router.push(`/course/${course_id}/${nextId}`);
     } else handleFinish();
   };
-
+  const { course } = useCourseStore();
   const handleQuiz = async () => {
     setPending(true);
 
@@ -285,18 +289,21 @@ export function CourseContent({ id }: { id: string }) {
     const language = assistantContext?.language || "Indonesian";
 
     setQuizState("search");
-    const finalMetadata = generateFinalMetadata(contentList);
+    const finalMetadata = generateFinalMetadata(
+      course?.title || "",
+      contentList,
+    );
     const result = await proceedToQuizAction(
       String(course_id),
       userContext.id,
       finalMetadata,
       language,
-      "search"
+      "search",
     );
 
     if (result?.error) {
       toast.error(
-        `Oops, we have trouble while ${result?.message || "searching quiz"}`
+        `Oops, we have trouble while ${result?.message || "searching quiz"}`,
       );
       setPending(false);
     } else if (result?.quiz) {
@@ -313,13 +320,13 @@ export function CourseContent({ id }: { id: string }) {
       userContext.id,
       finalMetadata,
       language,
-      "create"
+      "create",
     );
     if (newQuiz?.error) {
       toast.error(
         `Oops, something went wrong while ${
           newQuiz?.message || "creating quiz"
-        }`
+        }`,
       );
       setPending(false);
     } else if (newQuiz?.quiz) {
@@ -331,7 +338,20 @@ export function CourseContent({ id }: { id: string }) {
     }
     setQuizState(null);
   };
+  const { setItems, reset } = useBreadcrumbStore();
+  useEffect(() => {
+    if (course)
+      setItems([
+        { href: "/course", label: "Course" },
+        { href: `/course/${course.id}`, label: course.title },
+        {
+          href: `/course/${course.id}/${current.id}`,
+          label: current.title,
+        },
+      ]);
 
+    return () => reset();
+  }, [course]);
   return (
     <>
       <RemedialInterveneDialog
@@ -357,8 +377,8 @@ export function CourseContent({ id }: { id: string }) {
             {quizState === "search"
               ? "Searching for existing quiz..."
               : quizState === "create"
-              ? "Generating new quiz for you..."
-              : "I am cooking something here, i guarantee you..."}
+                ? "Generating new quiz for you..."
+                : "I am cooking something here, i guarantee you..."}
           </AlertDialogDescription>
         </AlertDialogContent>
       </AlertDialog>

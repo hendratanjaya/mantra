@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useActionState } from "react";
 import { FaGoogle } from "react-icons/fa";
 import { continueWithGoogleAction } from "../action";
+import { LoaderCircle } from "lucide-react";
 
 export default function OauthButton({ pending }: { pending: boolean }) {
   const [_, formAction, __] = useActionState(continueWithGoogleAction, null);
@@ -15,6 +16,7 @@ export default function OauthButton({ pending }: { pending: boolean }) {
       >
         <FaGoogle />
         Continue with Google
+        {pending && <LoaderCircle className="animate-spin" />}
       </Button>
     </form>
   );

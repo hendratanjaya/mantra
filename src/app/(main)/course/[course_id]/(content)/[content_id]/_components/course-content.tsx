@@ -159,7 +159,7 @@ export function CourseContent({ id }: { id: string }) {
     // console.log({ performance });
     console.log({ accuracy });
     // 3. intervention rules
-    const intervene = performance.accuracy < 0.7 || totalHints >= 2;
+    const intervene = performance.accuracy < 0.7 || totalHints > 3;
 
     return { intervene, performance };
   }

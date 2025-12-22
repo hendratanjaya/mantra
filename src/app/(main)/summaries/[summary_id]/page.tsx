@@ -51,7 +51,7 @@ export default async function CourseContentLayout({
     getCourseSummaryById(summary_id),
     getChatHistory(summary_id),
   ]);
-  if (!course) redirect("/summarize");
+  if (!course) redirect("/summaries");
 
   return (
     <ChatHistoryProvider chatHistory={chatHistory}>

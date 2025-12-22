@@ -43,8 +43,8 @@ export function ChatSection({
 }) {
   const [avatarImage, setAvatarImage] = useState<string | undefined>(undefined);
 
-  const { course_id, content_id, quiz_id } = useParams();
-  const courseId = course_id ? String(course_id) : undefined;
+  const { course_id, summary_id, content_id, quiz_id } = useParams();
+  const courseId = course_id ? String(course_id) : summary_id ? String(summary_id) : undefined;
   const contentId = content_id ? String(content_id) : undefined;
   const quizId = quiz_id ? String(quiz_id) : undefined;
 

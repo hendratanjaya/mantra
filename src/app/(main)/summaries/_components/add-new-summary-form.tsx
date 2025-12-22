@@ -70,7 +70,7 @@ export function AddNewSummaryForm({
       // To Do render generated course into the dedicated page
 
       const courseId = state.field;
-      router.push(`summarize/${courseId}`);
+      router.push(`/summaries/${courseId}`);
     });
   };
 

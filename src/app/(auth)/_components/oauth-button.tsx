@@ -5,18 +5,21 @@ import { continueWithGoogleAction } from "../action";
 import { LoaderCircle } from "lucide-react";
 
 export default function OauthButton({ pending }: { pending: boolean }) {
-  const [_, formAction, __] = useActionState(continueWithGoogleAction, null);
+  const [_, formAction, oauthPending] = useActionState(
+    continueWithGoogleAction,
+    null,
+  );
   return (
     <form action={formAction}>
       <Button
         className="w-full "
         type="submit"
         variant={"outline"}
-        disabled={pending}
+        disabled={pending || oauthPending}
       >
         <FaGoogle />
         Continue with Google
-        {pending && <LoaderCircle className="animate-spin" />}
+        {(pending || oauthPending) && <LoaderCircle className="animate-spin" />}
       </Button>
     </form>
   );

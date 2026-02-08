@@ -3,6 +3,8 @@ import { Course } from "@/generated/prisma";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Markdown from "react-markdown";
+import { useBreadcrumbStore } from "../_stores/use-breadcrumb-store";
+import { useCourseStore } from "../course/_stores/use-course-store";
 
 export function CourseItem({
   course,
@@ -13,9 +15,16 @@ export function CourseItem({
 
   const splitted = course?.summary ? course.summary.split(".") : [];
   const summary = splitted.length > 0 ? splitted[0] + "..." : "";
+  const { setCourse } = useCourseStore();
 
   return (
-    <Link href={`${path}/${course.id}`} className="group block">
+    <Link
+      href={`${path}/${course.id}`}
+      onClick={() => {
+        setCourse(course);
+      }}
+      className="group block"
+    >
       <div className="rounded-2xl border bg-card p-5 shadow-sm transition-all hover:shadow-md hover:border-primary/40">
         <div className="flex items-start justify-between">
           <div className="space-y-2">

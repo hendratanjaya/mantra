@@ -37,5 +37,5 @@ export const useLearningStore = create<LearningStore>((set) => ({
       return { attempts: updated };
     }),
 
-  resetAll: () => set({ attempts: null }),
+  resetAll: () => set({ attempts: null, hint: 0 }),
 }));

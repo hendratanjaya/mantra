@@ -14,10 +14,11 @@ export function SiteHeader() {
     const typed = new Typed(typeTarget.current, {
       strings: [
         "AI can make mistakes!",
-        "I forgot why I opened this page.",
+        // "I forgot why I opened this page.",
         "Why is this blinking at me?",
-        "Loading confidence… failed successfully.",
-        "Someone approved this, surprisingly.",
+        "Loading confidence…",
+        "AI can make mistakes!",
+        "Say your Mantra!",
       ],
       typeSpeed: 40,
       backSpeed: 25,

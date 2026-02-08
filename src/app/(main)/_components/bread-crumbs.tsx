@@ -8,36 +8,51 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { usePathname } from "next/navigation";
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
+import { useBreadcrumbStore } from "../_stores/use-breadcrumb-store";
 export function BreadCrumbHeader() {
   const path = usePathname();
+  const { items } = useBreadcrumbStore();
 
-  const pathSegment = path.split("/").filter((segment) => segment);
+  const fallbackCrumbs = useMemo(() => {
+    const segments = path.split("/").filter(Boolean);
 
-  const breadCrumbs = pathSegment.map((segment, idx) => {
-    const href = "/" + pathSegment.slice(0, idx + 1).join("/");
-    const isLastPath = idx === pathSegment.length - 1;
+    return segments.map((segment, idx) => {
+      const href = "/" + segments.slice(0, idx + 1).join("/");
+      const isLast = idx === segments.length - 1;
 
-    return (
-      <BreadcrumbItem key={href} className="hidden md:block">
-        {!isLastPath ? (
-          <BreadcrumbLink href={href} className="capitalize">
-            {segment}
-          </BreadcrumbLink>
-        ) : (
-          <BreadcrumbPage className="capitalize">{segment}</BreadcrumbPage>
-        )}
-      </BreadcrumbItem>
-    );
-  });
+      return { href, label: segment, isLast };
+    });
+  }, [path]);
+
+  const crumbs =
+    items.length > 0
+      ? items.map((item, idx) => ({
+          ...item,
+          isLast: idx === items.length - 1,
+        }))
+      : fallbackCrumbs;
+
+  if (!crumbs.length) return null;
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
-        {breadCrumbs.map((item, idx) => (
-          <Fragment key={idx}>
-            {item}
-            {idx !== breadCrumbs.length - 1 && (
+        {crumbs.map((crumb, idx) => (
+          <Fragment key={crumb.href}>
+            <BreadcrumbItem className="hidden md:block">
+              {!crumb.isLast ? (
+                <BreadcrumbLink href={crumb.href} className="capitalize">
+                  {crumb.label}
+                </BreadcrumbLink>
+              ) : (
+                <BreadcrumbPage className="capitalize">
+                  {crumb.label}
+                </BreadcrumbPage>
+              )}
+            </BreadcrumbItem>
+
+            {idx !== crumbs.length - 1 && (
               <BreadcrumbSeparator className="hidden md:block" />
             )}
           </Fragment>
